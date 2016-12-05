@@ -4,7 +4,6 @@ import requests
 import pandas as pd
 
 email_path = './beck-s'
-url = 'http://www.aueb.gr/users/ion/data/enron-spam/'
 new_line = '\n'
 
 def read_email_files(path):
@@ -36,7 +35,8 @@ def download_unzip(email_type, urls):
         os.system('tar -xzvf %s && rm %s' % (fname, fname))
     os.chdir(cwd)
 
-def read_enron_email_files(url):
+def read_enron_email_files():
+    url = 'http://www.aueb.gr/users/ion/data/enron-spam/'
     req = requests.get(url)
     soup = BeautifulSoup(req.content, 'html.parser')
     li_tags = soup.find_all('li')
@@ -69,4 +69,4 @@ def read_enron_email_files(url):
     pd.options.display.expand_frame_repr = False
     print spam.head()
 
-read_enron_email_files(url)
+read_enron_email_files()
