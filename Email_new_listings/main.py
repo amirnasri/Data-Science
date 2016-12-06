@@ -30,8 +30,16 @@ def read_table(t):
 	return df
 
 
-
+'''
 req = requests.get('http://bccondos.net/821-cambie')
 soup = BeautifulSoup(req.content, 'html.parser')
 table = soup.find_all('table')[4]
 print read_table(table)
+'''
+
+schema = '''
+CREATE TABLE IF NOT EXISTS "most_recent"
+(
+
+);
+'''
