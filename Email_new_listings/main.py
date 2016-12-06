@@ -2,6 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import numpy as np
 import pandas as pd
+import dbutils
+import sys
 
 def read_table(t):
 	rows = t.find_all('tr')
@@ -28,18 +30,40 @@ def read_table(t):
 	df.dropna(axis=0, how='all', inplace=True)
 	df.dropna(axis=1, how='all', inplace=True)
 	return df
+# Get current timestamp
+ts = time.time()
+st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
 
-'''
+# Get new listings
 req = requests.get('http://bccondos.net/821-cambie')
 soup = BeautifulSoup(req.content, 'html.parser')
 table = soup.find_all('table')[4]
-print read_table(table)
-'''
+new_listings = read_table(table)
+new_listings.date = st
 
-schema = '''
-CREATE TABLE IF NOT EXISTS "most_recent"
-(
+# Get most recently stored listings from db
+db = dbutils.get_db('/home/amir/git/ds/Email_new_listings/listings.db')
+#q_res = make_query(db, 'select * from t2;')
+most_recent = pd.read_sql_query("select * from most_recent", db)
 
-);
-'''
+
+if most_recent None:
+	new_listings.to_sql('most_recent', db, if_exists = 'replace')	
+	new_listings.to_sql('listings', db, if_exists = 'replace')	
+	sys.exit(0)
+
+is_new = new_listings.shape[0] != most_recent.shape[0]
+is_new = is_new or 
+
+MLS = 'MLS\xc2\xae'
+new_listings[MLS]
+
+	
+	
+
+
+
+
+
+
