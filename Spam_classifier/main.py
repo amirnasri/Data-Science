@@ -2,6 +2,11 @@ import os
 from bs4 import BeautifulSoup
 import requests
 import pandas as pd
+from sklearn.pipeline import Pipeline
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.model_selection import cross_val_score
+import numpy as np
+from sklearn.feature_extraction.text import CountVectorizer
 
 email_path = './beck-s'
 new_line = '\n'
@@ -67,6 +72,16 @@ def read_enron_email_files():
 
 
     pd.options.display.expand_frame_repr = False
-    print spam.head()
+    df = pd.concat([ham, spam])
+    return df.reindex(np.random.permutation(df.index))
 
-read_enron_email_files()
+df = read_enron_email_files()
+
+cv = CountVectorizer(decode_error='replace')
+nb = BernoulliNB()
+pl = Pipeline([('cv', cv), ('nb', nb)])
+
+#pl.fit(df.body.values[:1000], df.spam.values[:1000].astype(int))
+X = df.body
+y = df.spam.astype(int)
+print cross_val_score(pl, X[:10000], y[:10000])
