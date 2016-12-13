@@ -1,12 +1,26 @@
 import numpy as np
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.utils import check_random_state
+import time
+
+def timeit(method):
+
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+
+        print '%2.2f sec' % (te-ts)
+        return result
+
+    return timed
 
 class BernoulliNB_(object):
     def __init__(self):
         #self.alpha = alpha
         pass
 
+    @timeit
     def fit(self, X, y):
         m, n = X.shape
         #if y.shape != ()
@@ -34,7 +48,9 @@ class BernoulliNB_(object):
         self.ny_0_l = np.log(ny_0)
         self.ny_1_l = np.log(ny_1)
 
+    @timeit
     def predict(self, X):
+        m = X.shape[0]
         y_pred = np.zeros((m, 1), dtype=int)
         #P(x | y = 0) * p(y = 0)
         for i, x in enumerate(X):
@@ -55,22 +71,26 @@ class BernoulliNB_(object):
             y_pred[i] = int(metric0 < metric1)
         return y_pred
 
-
-if __name__ == '__main__':
-
-    m = 20000
-    n = 100
-    rs = check_random_state(seed=None)
-
-    X = rs.randint(2, size=(m, n))
-    y = rs.randint(2, size=(m,))
-
+@timeit
+def sklearn_BNB(X, y):
     clf = BernoulliNB(alpha=1, binarize=None, fit_prior=False)
     clf.fit(X, y)
 
     # print X
     print (y == clf.predict(X)).mean()
 
+if __name__ == '__main__':
+
+    m = 20000
+    n = 1000
+    rs = check_random_state(seed=None)
+
+    X = rs.randint(2, size=(m, n))
+    y = rs.randint(2, size=(m,))
+    print("========== Start")
+    sklearn_BNB(X, y)
+
     clf = BernoulliNB_()
     clf.fit(X, y)
-    print (y == clf.predict(X)).mean()
+    y_pred = clf.predict(X)
+    print (y.reshape(y_pred.shape) == y_pred).mean()
