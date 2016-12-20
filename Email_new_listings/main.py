@@ -86,7 +86,12 @@ if __name__ == '__main__':
 		prev_active.to_sql('past_listings', db, if_exists='append')
 
 
-	
+#TODO:
+# add timestamp to the listings
+# send an email with previous active listings and new active listings info
+# provide REST api for getting the active and previous listings
+# provide REST api for performing search or query on the past listings
+
 	
 
 
