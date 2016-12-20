@@ -62,7 +62,6 @@ if __name__ == '__main__':
 
 	# Get most recently stored listings from db
 	db = dbutils.get_db('./listings.db')
-	#q_res = make_query(db, 'select * from t2;')
 	try:
 		prev_active = pd.read_sql_query("select * from active_listings", db)
 	except BaseException:
@@ -73,15 +72,13 @@ if __name__ == '__main__':
 	if 'index' in prev_active.columns:
 		del prev_active['index']
 
-	is_new = True
 	try:
 		is_new = not (new_listings == prev_active).all().all()
 	except ValueError:
-		pass
+		is_new = True
 
 	print is_new
 	if is_new:
-	#	email(most_recent, new_listings)
 		new_listings.to_sql('active_listings', db, if_exists='replace')
 		prev_active.to_sql('past_listings', db, if_exists='append')
 
