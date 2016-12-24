@@ -7,6 +7,8 @@ import os
 from sklearn.svm import SVC
 from sklearn.cross_validation import  cross_val_score
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import Imputer
+
 
 def scorer(y, y_):
 	return np.abs(y - y_).mean()
@@ -34,8 +36,12 @@ def plot_learning_curve(clf, X, y, test_sizes = np.linspace(0.1, 1, 10), scorer 
 
 print os.getcwd()
 if not os.path.isfile('X_s.npy'):
-	df = pd.read_csv('train_v2.csv')
-	df = df.dropna(axis = 0)
+	#df = pd.read_csv('train_v2.csv')
+	X = np.genfromtxt('train_v2.csv', delimiter=',')
+
+	imp = Imputer(missing_values=np.nan, strategy='mean', axis=0)
+	#df = df.dropna(axis = 0)
+
 	df = df[df.columns[df.dtypes != 'O']]
 
 	sc = StandardScaler()
