@@ -33,22 +33,29 @@ class decision_tree(object):
         indexes = map(lambda a: bisect.bisect_left(thresholds, a), X[:, j])
         for i in range(len(thresholds) + 1):
             sub_index = (i == indexes)
+            prob = sub_index.mean()
             yield X[sub_index, :], y[sub_index, :], prob
 
     def select_feature(self, X, y):
-        gi = self.gini_impurity(X, y)
-        for j in range(self.m):
+        #gi = self.gini_impurity(X, y)
+        m, n = X.shape
+        gi_gain = np.zeros((n,))
+        thresholds = np.zeros((n,), dtype=np.object)
+        for j in range(n):
             x = X[:, j]
             x_unique = np.unique(x)
             #TODO: check if improvement possible
-            thresholds = np.linspace(x_unique.min(), x_unique.max(), self.max_step_split)
+            thresholds[j] = np.linspace(x_unique.min(), x_unique.max(), self.max_step_split)
             gi_children = 0
-            for Xc, yc, prob in decision_tree.split(X, y, j, thresholds):
+            for Xc, yc, prob in decision_tree.split(X, y, j, thresholds[j]):
                 gi_children += prob * decision_tree.gini_impurity(Xc, yc)
-            gi_gain = gi - gi_children
-
+            gi_gain[j] = gi_children
+        j = np.argmin(gi_gain)
+        return j, thresholds[j]
 
     def fit(self, X, y):
-        self.m, self.n = X.shape
         self.classes = np.unique(y)
         self.n_classes = len(self.classes)
+        j, thresholds = self.select_feature(X, y)
+        decision_tree.split(X, y, j, thresholds)
+
