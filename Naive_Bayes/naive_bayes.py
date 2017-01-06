@@ -1,21 +1,20 @@
 import numpy as np
-from sklearn.naive_bayes import BernoulliNB
+from sklearn.naive_bayes import BernoulliNB as BernoulliNB_SK
 from sklearn.utils import check_random_state
 import time
 
 def timeit(method):
-
     def timed(*args, **kw):
         ts = time.time()
         result = method(*args, **kw)
         te = time.time()
 
-        print '%2.2f sec' % (te-ts)
+        print 'function %s finished in %2.2f seconds' % (method.__name__, te-ts)
         return result
 
     return timed
 
-class BernoulliNB_(object):
+class BernoulliNB(object):
     def __init__(self):
         #self.alpha = alpha
         pass
@@ -73,16 +72,16 @@ class BernoulliNB_(object):
 
 @timeit
 def sklearn_BNB(X, y):
-    clf = BernoulliNB(alpha=1, binarize=None, fit_prior=False)
+    clf = BernoulliNB_SK(alpha=1, binarize=None, fit_prior=False)
     clf.fit(X, y)
 
     # print X
-    print (y == clf.predict(X)).mean()
+    print "Error rate: %f" % (y != clf.predict(X)).mean()
 
 if __name__ == '__main__':
 
     m = 20000
-    n = 1000
+    n = 10000
     rs = check_random_state(seed=None)
 
     X = rs.randint(2, size=(m, n))
@@ -90,7 +89,7 @@ if __name__ == '__main__':
     print("========== Start")
     sklearn_BNB(X, y)
 
-    clf = BernoulliNB_()
+    clf = BernoulliNB()
     clf.fit(X, y)
     y_pred = clf.predict(X)
-    print (y.reshape(y_pred.shape) == y_pred).mean()
+    print "Error rate: %f" % (y.reshape(y_pred.shape) != y_pred).mean()
