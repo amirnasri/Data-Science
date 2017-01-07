@@ -21,6 +21,8 @@ clf1 = KNeighborsClassifier(n_neighbors=1)
 clf2 = RandomForestClassifier(random_state=1)
 clf3 = GaussianNB()
 lr = LogisticRegression()
+
+
 sclf = Stacking(estimators=[clf1, clf2, clf3], combiner=lr)
 #sclf = StackingClassifier([clf1, clf2, clf3], lr, use_probas = True)
 print('3-fold cross validation:\n')
