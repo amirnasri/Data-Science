@@ -6,11 +6,11 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
-from stacking import Stacking
+from stacking import StackingClassifier
 from sklearn.cross_validation import train_test_split
-import sys
-sys.path.append('/home/amir/git')
-from mlxtend.classifier import StackingClassifier
+#import sys
+#sys.path.append('/home/amir/git')
+#from mlxtend.classifier import StackingClassifier
 
 iris = datasets.load_iris()
 X, y = iris.data[:, 1:3], iris.target
@@ -23,7 +23,7 @@ clf3 = GaussianNB()
 lr = LogisticRegression()
 
 
-sclf = Stacking(estimators=[clf1, clf2, clf3], combiner=lr)
+sclf = StackingClassifier(estimators=[clf1, clf2, clf3], combiner=lr)
 #sclf = StackingClassifier([clf1, clf2, clf3], lr, use_probas = True)
 print('3-fold cross validation:\n')
 
