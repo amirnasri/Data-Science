@@ -1,2 +1,3 @@
 import feature_selection
 import metrics
+import naive_bayes
