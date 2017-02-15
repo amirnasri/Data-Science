@@ -44,3 +44,14 @@ def timeit(method):
 		return result
 
 	return timed
+
+# feature normalization
+def normalize_feature(self, X):
+	X = X.copy()
+	self.X_mean = np.reshape(np.average(X[:, 1:], axis=0), (1, -1))
+	X[:, 1:] -= self.X_mean
+	self.X_sigma = np.reshape(np.average(X[:, 1:] ** 2, axis=0) ** 0.5, (1, -1))
+	X = X.dot(np.diag(np.r_[1, self.X_sigma.ravel()] ** -1))
+	print self.X_mean
+	print self.X_sigma
+	return X
