@@ -12,8 +12,8 @@ import io
 from sklearn.cross_validation import KFold
 from sklearn.metrics import f1_score, confusion_matrix
 import sys
-sys.path.append('~/git/ds/Naive_Bayes')
-from naive_bayes import MultinomialNB
+#sys.path.append('~/git/ds/Naive_Bayes')
+#from naive_bayes import MultinomialNB
 
 new_line = '\n'
 
