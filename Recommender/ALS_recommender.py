@@ -28,7 +28,7 @@ sc.setLogLevel("WARN")
 #logger.LogManager.getLogger("org"). setLevel( logger.Level.ERROR )
 #logger.LogManager.getLogger("akka").setLevel( logger.Level.ERROR )
 
-dir = "ml-100k"
+dir = "ml-1m"
 if len(sys.argv) >= 2:
 	dir = sys.argv[1]
 
