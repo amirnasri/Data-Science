@@ -8,6 +8,8 @@ import pandas as pd
 import pickle
 import requests
 from bs4 import BeautifulSoup
+from django.http import JsonResponse
+
 
 def load_pickle(name):
     with open(name, 'rb') as f:
@@ -41,9 +43,21 @@ def get_poster_imdb(url):
 
 def index(request):
     context = {}
+    movies_options = u''
+    print movies_df
+    for movie in movies_df['movie-title'].tolist():
+        try:
+            movies_options += u'<option> %s </option>' % movie
+        except UnicodeDecodeError:
+            pass
+    context['movie_options'] = movies_options
     return render(request, 'recommander/index.html', context)
 
-def main(request):
+def test(request):
+    context = {}
+    return render(request, 'recommander/test.html', context)
+
+def recommander(request):
     qs = request.environ['QUERY_STRING']
     names = [i.split('=')[1] for i in qs.split('&')]
     #return HttpResponse("Hello %s " % " ".join(names))
@@ -54,13 +68,14 @@ def main(request):
     recom_movie_df = pd.merge(pd.DataFrame({'MovieID': [movie_index_to_ID[i] for i in recom_movie_index]}), movies_df, how='inner', on='MovieID')
 
     img_urls = ''
-    for url in recom_movie_df['IMDb-URL'].tolist()[:1]:
+    for url in recom_movie_df['IMDb-URL'].tolist()[:5]:
         img_urls += '<a href = "%s">' % url + \
-            '<img src="%s" style = "width:260px;height:380px;border:0">' % get_poster_imdb(url) + \
+            '<img src="%s" style = "width:200px;height:300px;border:0">' % get_poster_imdb(url) + \
             '</a>'
 
     context['img_urls'] = img_urls
-    context['cwd'] = cwd
-    context['ls_output'] = os.listdir('data')
-    return render(request, 'recommander/main.html', context)
+    #context['cwd'] = cwd
+    #context['ls_output'] = os.listdir('data')
+    #return render(request, 'recommander/recom_result.html', context)
 
+    return JsonResponse(context)
