@@ -49,7 +49,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'django_proj.urls'
+ROOT_URLCONF = 'website.urls'
 
 SETTINGS_PATH = os.path.normpath(os.path.dirname(__file__))
 # Find templates in the same folder as settings.py.
@@ -70,7 +70,7 @@ TEMPLATES = [
 ]
 
 
-WSGI_APPLICATION = 'django_proj.wsgi.application'
+WSGI_APPLICATION = 'website.wsgi.application'
 
 
 # Database

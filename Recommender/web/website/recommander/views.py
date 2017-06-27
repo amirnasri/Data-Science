@@ -63,7 +63,7 @@ def recommander(request):
     #context = {'a':int(request.GET['r1'])}
     context = {}
     url_list = []
-    recom_movie_index = reversed(np.argsort(pp_sim[0, :]))[:5]
+    recom_movie_index = (np.argsort(pp_sim[0, :]))[::-1][:5]
     recom_movie_id_df = pd.DataFrame({'MovieID': [movie_index_to_ID[i] for i in recom_movie_index]})
     recom_movie_df = pd.merge(recom_movie_id_df, movies_df, how='inner', on='MovieID')
 
