@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 key_file = "spark_emr.pem"
 key_name = "spark_emr"

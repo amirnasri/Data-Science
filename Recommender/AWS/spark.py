@@ -46,3 +46,10 @@ shell.run("chmod 600 %s" % key_file)
 command = "%s -i %s -k %s -t %s -s %s launch %s" % (os.path.join(script_dir, "spark-ec2"), key_file, key_file_name, instance_type, 2, aim)
 print("Running command %s" % command)
 shell.run(command)
+
+
+
+"""
+../../../spark-ec2/spark-ec2 --slaves=2 --region=us-east-1  --key-pair=spark --identity-file=spark.pem -a ami-52d5d044 
+launch spark_cluster -t t2.micro --ebs-vol-num=1 --ebs-vol-size=1
+"""
