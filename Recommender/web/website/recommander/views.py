@@ -20,9 +20,8 @@ cwd = os.getcwd()
 pp_sim = np.load('data/pp_sim.npy')
 movie_index_to_ID = load_pickle('data/movie_index_to_ID.pkl')
 movies_df = pd.read_pickle('data/movies_df.pkl')
-recom_movie_index = np.argsort(pp_sim[0, :])[::-1][:10]
-recom_movie_id_df = pd.DataFrame({'MovieID': [movie_index_to_ID[i] for i in recom_movie_index]})
-recom_movie_df = pd.merge(recom_movie_id_df, movies_df, how='inner', on='MovieID')
+#recom_movie_index = np.argsort(pp_sim[0, :])[::-1][:5]
+#recom_movie_df = pd.merge(recom_movie_id_df, movies_df, how='inner', on='MovieID')
 
 def get_poster_imdb(url):
     if url in url_cache:
@@ -64,11 +63,12 @@ def recommander(request):
     #context = {'a':int(request.GET['r1'])}
     context = {}
     url_list = []
-    recom_movie_index = np.argsort(pp_sim[0, :])[::-1][:10]
-    recom_movie_df = pd.merge(pd.DataFrame({'MovieID': [movie_index_to_ID[i] for i in recom_movie_index]}), movies_df, how='inner', on='MovieID')
+    recom_movie_index = (np.argsort(pp_sim[0, :]))[::-1][:5]
+    recom_movie_id_df = pd.DataFrame({'MovieID': [movie_index_to_ID[i] for i in recom_movie_index]})
+    recom_movie_df = pd.merge(recom_movie_id_df, movies_df, how='inner', on='MovieID')
 
     img_urls = ''
-    for url in recom_movie_df['IMDb-URL'].tolist()[:5]:
+    for url in recom_movie_df['IMDb-URL'].tolist():
         img_urls += '<a href = "%s">' % url + \
             '<img src="%s" style = "width:200px;height:300px;border:0">' % get_poster_imdb(url) + \
             '</a>'
