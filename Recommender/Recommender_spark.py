@@ -70,7 +70,7 @@ ratings_rdd = sc.textFile(u_data_file).map(parse_data)  # .cache().filter(lambda
 ratings_columns = "UserID::MovieID::Rating::Timestamp".split("::")
 ratings_sp = spark.createDataFrame(ratings_rdd, schema=ratings_columns)
 
-model = ALS.train(ratings_sp.select(['UserID', 'MovieID', 'Rating']), rank = 10, iterations = 30)
+model = ALS.train(ratings_sp.select(['UserID', 'MovieID', 'Rating']), rank = 10, iterations = 10)
 
 
 def row_style_to_coordinate(m):

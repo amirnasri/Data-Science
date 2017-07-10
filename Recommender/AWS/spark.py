@@ -52,4 +52,8 @@ shell.run(command)
 """
 ../../../spark-ec2/spark-ec2 --slaves=2 --region=us-east-1  --key-pair=spark --identity-file=spark.pem -a ami-52d5d044 
 launch spark_cluster -t t2.micro --ebs-vol-num=1 --ebs-vol-size=1
+
+
+scp -i AWS/spark.pem -r work ubuntu@ec2-34-201-14-166.compute-1.amazonaws.com:
+
 """
