@@ -1,6 +1,9 @@
+#!/usr/bin/python 
 import csv
 import os
 from subprocess import Popen, PIPE
+import subprocess
+
 
 class shell_process:
     def __init__(self):
@@ -35,18 +38,29 @@ os.environ['AWS_SECRET_ACCESS_KEY'] = AWS_SECRET_ACCESS_KEY
 shell = shell_process()
 shell.run('env | grep -i aws')
 
-script_dir = "../../../training-scripts/"
+script_dir = "~/git/spark-ec2/"
 key_file = os.path.abspath("spark.pem")
-key_file_name = "spark"
-instance_type = "t1.micro"
-n_slaves = 2
-aim = "amplab-training"
+cluster_name = 'spark_cluster'
+
+opts = dict()
+opts['slaves'] = 1
+opts['region'] = 'us-east-1'
+opts['key-pair'] = 'spark'
+opts['identity-file'] = key_file
+opts['ami'] = 'ami-52d5d044'
+opts['ebs-vol-num'] = 1
+opts['ebs-vol-size'] = 1
+opts['instance-type'] = 't2.micro'
+
+
 
 shell.run("chmod 600 %s" % key_file)
-command = "%s -i %s -k %s -t %s -s %s launch %s" % (os.path.join(script_dir, "spark-ec2"), key_file, key_file_name, instance_type, 2, aim)
+#command = "%s -i %s -k %s -t %s -s %s launch %s" % (os.path.join(script_dir, "spark-ec2"), key_file, key_file_name, instance_type, 2, aim)
+command_opts = ' '.join(['--%s=%s'%(k, v) for k, v in opts.items()])
+command = "%s %s launch %s" % (os.path.expanduser(os.path.join(script_dir, "spark-ec2")), command_opts, cluster_name)
 print("Running command %s" % command)
-shell.run(command)
-
+#shell.run(command)
+subprocess.check_call(command.split(), shell=False)
 
 
 """
