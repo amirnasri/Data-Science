@@ -758,7 +758,7 @@ def get_existing_cluster(conn, opts, cluster_name, die_on_error=True):
     Get the EC2 instances in an existing cluster if available.
     Returns a tuple of lists of EC2 instance objects for the masters and slaves.
     """
-    print("Searching for existing cluster {c} in region {r}...".format(
+    print("Searching for existing cluster {c} in region {r}...\n".format(
           c=cluster_name, r=opts.region))
 
     def get_instances(group_names):
@@ -790,6 +790,61 @@ def get_existing_cluster(conn, opts, cluster_name, die_on_error=True):
 
     return (master_instances, slave_instances)
 
+def _ssh_read(host, opts, command, user=None):
+    try:
+        output = ssh_read(host, opts, command)
+    except subprocess.CalledProcessError as e:
+        print("remote command failed with status %d", e.returncode)
+        raise e
+    print("Response:  %s" % output)
+    return output
+
+def print_flush(s):
+    print(s)
+    sys.stdout.flush()
+
+SPARK_HOME = '~/spark'
+# Connect to the master and slaves one-by-one and stop spark master
+# and slave processes.
+def stop_spark_cluster(master_nodes, slave_nodes, opts):
+    master_address = get_dns_name(master_nodes[0])
+    slave_addresses = [get_dns_name(i) for i in slave_nodes]
+    command = os.path.join(SPARK_HOME, 'sbin/stop-master.sh')
+    print_flush("Stoping spark on master node (%s)..." % master_address)
+    _ssh_read(master_address, opts, command)
+
+    command = os.path.join(SPARK_HOME, 'sbin/stop-slave.sh')
+    for s in slave_addresses:
+        print_flush("Stoping spark on slave node (%s)..." % s)
+        _ssh_read(s, opts, command)
+
+
+# Connect to the master and slaves one-by-one and start spark master
+# and slave processes.
+def start_spark_cluster(master_nodes, slave_nodes, opts):
+    stop_spark_cluster(master_nodes, slave_nodes, opts)
+    master_address = get_dns_name(master_nodes[0])
+    slave_addresses = [get_dns_name(i) for i in slave_nodes]
+    command = os.path.join(SPARK_HOME, 'sbin/start-master.sh')
+    print_flush("Starting spark on master node (%s)..." % master_address)
+    _ssh_read(master_address, opts, command)
+
+    command = os.path.join(SPARK_HOME, 'sbin/start-slave.sh') + ' spark://%s:7077' % master_address
+    for s in slave_addresses:
+        print_flush("Starting spark on slave node (%s)..." % s)
+        _ssh_read(s, opts, command)
+
+    with open("master_slave", "w") as f:
+        f.write(master_address + "\n")
+        for s in slave_addresses:
+            f.write(s + "\n")
+
+    print("Successfully started spark cluster")
+    print("Master node:\n\t%s\n" % master_address)
+    print("Slave node(s):")
+    for s in slave_addresses:
+        print("\t%s" % s)
+    print
 
 # Deploy configuration files and run setup scripts on a newly launched
 # or started EC2 cluster.
@@ -823,6 +878,7 @@ def setup_cluster(conn, master_nodes, slave_nodes, opts, deploy_ssh_key):
     if opts.hadoop_major_version == "yarn":
         opts.worker_instances = ""
 
+    """
     # NOTE: We should clone the repository before running deploy_files to
     # prevent ec2-variables.sh from being overwritten
     print("Cloning spark-ec2 scripts from {r}/tree/{b} on master...".format(
@@ -835,6 +891,7 @@ def setup_cluster(conn, master_nodes, slave_nodes, opts, deploy_ssh_key):
         + "git clone {r} -b {b} spark-ec2".format(r=opts.spark_ec2_git_repo,
                                                   b=opts.spark_ec2_git_branch)
     )
+    """
 
     print("Deploying files to master...")
     deploy_files(
@@ -856,6 +913,7 @@ def setup_cluster(conn, master_nodes, slave_nodes, opts, deploy_ssh_key):
 
     #print("Running setup on master...")
     #setup_spark_cluster(master, opts)
+    start_spark_cluster(master_nodes, slave_nodes, opts)
     print("Done!")
 
 
@@ -1141,7 +1199,7 @@ def deploy_user_files(root_dir, opts, master_nodes):
 
 
 def stringify_command(parts):
-    if isinstance(parts, str):
+    if isinstance(parts, str) or isinstance(parts, unicode):
         return parts
     else:
         return ' '.join(map(pipes.quote, parts))
@@ -1152,6 +1210,7 @@ def ssh_args(opts):
     parts += ['-o', 'UserKnownHostsFile=/dev/null']
     if opts.identity_file is not None:
         parts += ['-i', opts.identity_file]
+    parts += ['-q']
     return parts
 
 
@@ -1161,15 +1220,17 @@ def ssh_command(opts):
 
 # Run a command on a host through ssh, retrying up to five times
 # and then throwing an exception if ssh continues to fail.
-def ssh(host, opts, command):
+def ssh(host, opts, command, user=None, n_tries=5):
+    if not user:
+        user = opts.user
     tries = 0
     while True:
         try:
             return subprocess.check_call(
-                ssh_command(opts) + ['-t', '-t', '%s@%s' % (opts.user, host),
+                ssh_command(opts) + ['-t', '-t', '%s@%s' % (user, host),
                                      stringify_command(command)])
         except subprocess.CalledProcessError as e:
-            if tries > 5:
+            if tries > n_tries:
                 # If this was an ssh failure, provide the user with hints.
                 if e.returncode == 255:
                     raise UsageError(
@@ -1199,9 +1260,13 @@ def _check_output(*popenargs, **kwargs):
     return output
 
 
-def ssh_read(host, opts, command):
-    return _check_output(
-        ssh_command(opts) + ['%s@%s' % (opts.user, host), stringify_command(command)])
+def ssh_read(host, opts, command, user=None):
+    if not user:
+        user = opts.user
+    command = ssh_command(opts) + ['%s@%s' % (opts.user, host), stringify_command(command)]
+    print("Command:  %s" % " ".join(command))
+    print
+    return _check_output(command)
 
 
 def ssh_write(host, opts, command, arguments):
@@ -1209,7 +1274,8 @@ def ssh_write(host, opts, command, arguments):
     while True:
         proc = subprocess.Popen(
             ssh_command(opts) + ['%s@%s' % (opts.user, host), stringify_command(command)],
-            stdin=subprocess.PIPE)
+            stdin=subprocess.PIPE
+        )
         proc.stdin.write(arguments)
         proc.stdin.close()
         status = proc.wait()
@@ -1516,6 +1582,12 @@ def real_main():
 
         setup_cluster(conn, master_nodes, slave_nodes, opts, False)
 
+    elif action == "start-spark":
+        (master_nodes, slave_nodes) = get_existing_cluster(conn, opts, cluster_name)
+        start_spark_cluster(master_nodes, slave_nodes, opts)
+    elif action == "stop-spark":
+        (master_nodes, slave_nodes) = get_existing_cluster(conn, opts, cluster_name)
+        stop_spark_cluster(master_nodes, slave_nodes, opts)
     else:
         print("Invalid action: %s" % action, file=stderr)
         sys.exit(1)
