@@ -32,6 +32,9 @@ def arg_parse(*args, **kwargs):
         "python_driver",
         help="Python driver program to run on the master.")
     parser.add_argument(
+        "--remote-spark-home", default="~/spark/",
+        help="Directory on the instances where spark is installed (default: '%(default)s').")
+    parser.add_argument(
         "--copy-master", action="store_true",
         help="Whether to copy 'copy-dir' to the master.")
     parser.add_argument(
@@ -98,14 +101,14 @@ def ssh(master, args, remote_command, extra_args=""):
     ssh_args.extend(['-i', args.identity_file])
     ssh_args.append(extra_args)
     ssh_command = "ssh %s" % " ".join(ssh_args)
-    ssh_command_args = "ssh -i {identity_file} {user}@{master} 'remote_command'".format(
+    ssh_command = "ssh -i {identity_file} {user}@{master} 'remote_command'".format(
         user=args.user,
         master=master,
         identity_file=args.identity_file,
         remote_command=remote_command,
     )
-    print(ssh_command_args)
-    os.system(ssh_command_args)
+    print(ssh_command)
+    os.system(ssh_command)
 
 
 def copy_master(master, args):
@@ -118,28 +121,26 @@ def copy_master(master, args):
     Note: The directory will be copied to ~/work on the master. If directory already exists
     it will be deleted first.
     """
-    remote_command = "rm -fr work"
 
-    scp_command_args = "scp -i {identity_file} {user}@{master}:work".format(
+    ssh(master, args, "rm -fr work")
+
+    scp_command = "scp -i {identity_file} -r {copy_dir} {user}@{master}:work".format(
+        identity_file=args.identity_file,
+        copy_dir=args.copy_dir,
         user=args.user,
         master=master,
-        identity_file=args.identity_file,
     )
-    print(scp_command_args)
-    os.system(scp_command_args)
+    print(scp_command)
+    os.system(scp_command)
+
+    ssh(master, args, "ephemeral-hdfs/bin/hadoop fs -put work /work")
+
 
 def run_spark(master, args):
-    ssh_args = ['-o', 'StrictHostKeyChecking=no']
-    ssh_args += ['-o', 'UserKnownHostsFile=/dev/null']
-    ssh_args += ['-i', args.identity_file]
-    ssh_command = "ssh %s" % " ".join(ssh_args)
-    python_script = args.python_driver
-    remote_command = "cd work; ~/spark/bin/spark-submit --master spark://%s:7077 %s" % (master, python_script)
-    ssh_command_args = "%s ubuntu@%s '%s'" % (ssh_command, master, remote_command)
+    remote_command = "cd work; {0}/bin/spark-submit --master spark://{1}:7077 {2}".format(
+        args.remote_spark_home, master, args.python_driver
+    )
     ssh(master, args, remote_command)
-    print
-    ssh_command_args
-    os.system(ssh_command_args)
 
 
 def main():
