@@ -19,10 +19,17 @@ class shell_process:
         self.p.stdin.write(command)
 
 
-def arg_parse():
+def arg_parse(*args, **kwargs):
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "python-driver",
+        "action",
+        choices=('launch', 'destroy', 'start', 'start-spark', 'stop-spark'),
+        help="Action to perform on the cluster.")
+    parser.add_argument(
+        "cluster_name",
+        help="Name of the ec2 culster.")
+    parser.add_argument(
+        "python_driver",
         help="Python driver program to run on the master.")
     parser.add_argument(
         "--copy-master", action="store_true",
@@ -35,7 +42,7 @@ def arg_parse():
         help="SSH user to use for logging onto the master (default: '%(default)s').")
     parser.add_argument(
         "-i", "--identity-file",
-        help="SSH private key file to user for logging into instances.")
+        help="SSH private key file to user for logging into instances (default: '%(default)s').")
     parser.add_argument(
         "--ec2-access-key", default="accessKeys.csv",
         help="AWS ec2 access key file (default: '%(default)s').")
@@ -44,7 +51,8 @@ def arg_parse():
         help = "Number of slaves to launch (default: %(default)s)")
     parser.add_argument(
         "-k", "--key-pair",
-        help="Key pair to use on instances")
+        default="",
+        help="Key pair to use on instances (default: '%(default)s').")
     parser.add_argument(
         "-t", "--instance-type", default="t2.micro",
         help="Type of instance to launch (default: %(default)s).")
@@ -52,24 +60,95 @@ def arg_parse():
         "-r", "--region", default="us-east-1",
         help="EC2 region used to launch instances in, or to find them in (default: %(default)s")
     parser.add_argument(
-        "-z", "--zone", default="",
-        help="Availability zone to launch instances in, or 'all' to spread " +
-             "slaves across multiple (an additional $0.01/Gb for bandwidth" +
-             "between zones applies) (default: a single zone chosen at random)")
-    parser.add_argument(
         "-a", "--ami",
-        help="Amazon Machine Image ID to use")
-    return parser.parse_args()
+        default="ami-52d5d044",
+        help="Amazon Machine Image ID to use (default: %(default)s).")
+    return parser, parser.parse_args(*args, **kwargs)
+
+
+def run_ec2_cluster(script_path, args, args_extra):
+    print(args.slaves, args.ami
+          )
+    command_str = "{script_path} --user={user} " \
+                  "--slaves={slaves} --key-pair={key_pair} --instance-type={instance_type} " \
+                  "--region={region} --ami={ami} "
+
+    command = command_str.format(
+        script_path=script_path,
+        user=args.user,
+        identity_file=args.identity_file,
+        slaves=args.slaves,
+        key_pair=args.key_pair,
+        instance_type=args.instance_type,
+        region=args.region,
+        ami=args.ami,
+    )
+    command += args_extra
+    print("Running spark-ec2 script %s\n" % command)
+    sys.exit(1)
+
+    try:
+        subprocess.check_call(command.split(), shell=False)
+    except subprocess.CalledProcessError as e:
+        print("script failed with exit status %d\n", e.returncode)
+
+def ssh(master, args, remote_command, extra_args=""):
+    ssh_args = ['-o', 'StrictHostKeyChecking=no']
+    ssh_args.extend(['-o', 'UserKnownHostsFile=/dev/null'])
+    ssh_args.extend(['-i', args.identity_file])
+    ssh_args.append(extra_args)
+    ssh_command = "ssh %s" % " ".join(ssh_args)
+    ssh_command_args = "ssh -i {identity_file} {user}@{master} 'remote_command'".format(
+        user=args.user,
+        master=master,
+        identity_file=args.identity_file,
+        remote_command=remote_command,
+    )
+    print(ssh_command_args)
+    os.system(ssh_command_args)
+
+
+def copy_master(master, args):
+    """Copy local work directory specified in 'copy-dir' option to the master.
+
+    Local work directory should contain python driver program as well as any program
+    or data needed by the driver program. After directory is uploaded to master, it is
+    copied to hdfs so that it is also available in slaves.
+
+    Note: The directory will be copied to ~/work on the master. If directory already exists
+    it will be deleted first.
+    """
+    remote_command = "rm -fr work"
+
+    scp_command_args = "scp -i {identity_file} {user}@{master}:work".format(
+        user=args.user,
+        master=master,
+        identity_file=args.identity_file,
+    )
+    print(scp_command_args)
+    os.system(scp_command_args)
+
+def run_spark(master, args):
+    ssh_args = ['-o', 'StrictHostKeyChecking=no']
+    ssh_args += ['-o', 'UserKnownHostsFile=/dev/null']
+    ssh_args += ['-i', args.identity_file]
+    ssh_command = "ssh %s" % " ".join(ssh_args)
+    python_script = args.python_driver
+    remote_command = "cd work; ~/spark/bin/spark-submit --master spark://%s:7077 %s" % (master, python_script)
+    ssh_command_args = "%s ubuntu@%s '%s'" % (ssh_command, master, remote_command)
+    ssh(master, args, remote_command)
+    print
+    ssh_command_args
+    os.system(ssh_command_args)
 
 
 def main():
-    args = arg_parse()
+    parser, args = arg_parse()
     with open(args.ec2_access_key) as f:
         try:
             keys = list(csv.reader(f))[1]
             ACCESS_KEY_ID = keys[0]
             AWS_SECRET_ACCESS_KEY = keys[1]
-            #print("|%s|%s|" % (ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY))
 
         except IOError:
             print("Failed to read access keys from file.")
@@ -80,55 +159,26 @@ def main():
     shell = shell_process()
     #shell.run('env | grep -i aws')
 
-    #script_dir = "~/git/spark-ec2/"
     script_dir = "."
-    key_file = os.path.abspath("spark.pem")
-    cluster_name = 'spark_cluster'
+    key_file = ""
+    if args.identity_file:
+        shell.run("chmod 600 %s" % args.identity_file)
 
     opts = dict()
-    opts['slaves'] = 1
-    opts['region'] = 'us-east-1'
-    opts['key-pair'] = 'spark'
-    opts['identity-file'] = key_file
-    opts['ami'] = 'ami-52d5d044'
     opts['ebs-vol-num'] = 1
     opts['ebs-vol-size'] = 1
-    opts['instance-type'] = 't2.micro'
-    opts['user'] = 'ubuntu'
-    action = sys.argv[1]
+    if args.identity_file:
+        opts['identity-file'] = args.identity_file
 
-    def run_spark_ec2(script_path, action, culster_name, opts):
-        command = "{script} %s %s %s".format(
-                            script=script_path,
-                            , command_optscluster_name)
-        print("Running spark-ec2 script %s\n" % command)
-        try:
-            subprocess.check_call(command.split(), shell=False)
-        except subprocess.CalledProcessError as e:
-            print("script failed with exit status %d\n", e.returncode)
+    command_opts_extra = " ".join(["--{0}={1}".format(k, v) for k, v in opts.items()])
 
-    shell.run("chmod 600 %s" % key_file)
-    #command = "%s -i %s -k %s -t %s -s %s launch %s" % (os.path.join(script_dir, "spark-ec2"), key_file, key_file_name, instance_type, 2, aim)
-    command_opts = ' '.join(['--%s=%s'%(k, v) for k, v in opts.items()])
-
-    run_spark_ec2(
+    # command = "%s -i %s -k %s -t %s -s %s launch %s" % (os.path.join(script_dir, "spark-ec2"), key_file, key_file_name, instance_type, 2, aim)
+    # command = "%s %s %s %s" % (os.path.expanduser(os.path.join(script_dir, "spark-ec2")), command_opts, action, cluster_name)
+    run_ec2_cluster(
         script_path=os.path.expanduser(os.path.join(script_dir, "spark-ec2")),
-        culster_name=cluster_name)
-
-    command = "%s %s %s %s" % (os.path.expanduser(os.path.join(script_dir, "spark-ec2")), command_opts, action, cluster_name)
-    print("Running spark-ec2 script %s\n" % command)
-    #shell.run(command)
-    try:
-        subprocess.check_call(command.split(), shell=False)
-    except subprocess.CalledProcessError as e:
-        print("script failed with exit status %d\n", e.returncode)
-
-    with open("master_slave", "r") as f:
-        master_address = f.readline().strip()
-
-    if not master_address:
-        print("Failed to obtain master address.")
-        sys.exit(1)
+        args=args,
+        args_extra=command_opts_extra,
+    )
 
 
     """
@@ -139,15 +189,17 @@ def main():
     3) run spark submit on the master
     """
 
-    ssh_args = ['-o', 'StrictHostKeyChecking=no']
-    ssh_args += ['-o', 'UserKnownHostsFile=/dev/null']
-    ssh_args += ['-i', key_file]
-    ssh_command = "ssh %s" % " ".join(ssh_args)
-    python_script = 'Recommender_spark.py'
-    remote_command = "cd work; ~/spark/bin/spark-submit --master spark://%s:7077 %s" %(master_address, python_script)
-    ssh_command_args = "%s ubuntu@%s '%s'" % (ssh_command, master_address, remote_command)
-    print ssh_command_args
-    os.system(ssh_command_args)
+    with open("master_slave", "r") as f:
+        master_address = f.readline().strip()
+
+    if not master_address:
+        print("Failed to obtain master address.")
+        sys.exit(1)
+
+    if args.copy_master:
+        copy_master(master_address, args)
+
+    run_spark(master_address, args)
 
     """
     ../../../spark-ec2/spark-ec2 --slaves=2 --region=us-east-1  --key-pair=spark --identity-file=spark.pem -a ami-52d5d044
