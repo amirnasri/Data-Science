@@ -1097,6 +1097,7 @@ def get_num_disks(instance_type):
 #
 # root_dir should be an absolute path to the directory with the files we want to deploy.
 def deploy_files(conn, root_dir, opts, master_nodes, slave_nodes, modules):
+    print(root_dir)
     active_master = get_dns_name(master_nodes[0], opts.private_ips)
 
     num_disks = get_num_disks(opts.instance_type)
@@ -1151,7 +1152,8 @@ def deploy_files(conn, root_dir, opts, master_nodes, slave_nodes, modules):
 
     # Create a temp directory in which we will place all the files to be
     # deployed after we substitue template parameters in them
-    tmp_dir = tempfile.mkdtemp()
+    #tmp_dir = tempfile.mkdtemp()
+    tmp_dir = "tmp/"
     for path, dirs, files in os.walk(root_dir):
         if path.find(".svn") == -1:
             dest_dir = os.path.join('/', path[len(root_dir):])
@@ -1176,6 +1178,8 @@ def deploy_files(conn, root_dir, opts, master_nodes, slave_nodes, modules):
         "%s/" % tmp_dir,
         "%s@%s:/" % (opts.user, active_master)
     ]
+    print(command)
+    print(os.listdir(tmp_dir))
     subprocess.check_call(command)
     # Remove the temp directory we created above
     shutil.rmtree(tmp_dir)
