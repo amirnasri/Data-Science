@@ -204,8 +204,9 @@ def main():
     run_spark(master_address, args)
 
     # Compress the results on the master and upload them to http server.
-    ssh(master_address, args, "tar -zcvf result.tar.gz work/result "
-                              "&&  curl -T result.tar.gz amirnasri.ca/Recommender/update"
+    ssh(master_address, args, "cd work/result/"
+                              "&& tar -zcvf result.tar.gz * "
+                              "&&  curl -T result.tar.gz amirnasri.ca/recommender/upload_data"
                               "&&  rm result.tar.gz")
 
     """
