@@ -63,6 +63,10 @@ def arg_parse(*args, **kwargs):
         "-r", "--region", default="us-east-1",
         help="EC2 region used to launch instances in, or to find them in (default: %(default)s")
     parser.add_argument(
+        "--private-ips", action="store_true", default=False,
+        help="Use private IPs for instances rather than public if VPC/subnet " +
+             "requires that.")
+    parser.add_argument(
         "-a", "--ami",
         default="ami-52d5d044",
         help="Amazon Machine Image ID to use (default: %(default)s).")
@@ -72,6 +76,7 @@ def arg_parse(*args, **kwargs):
 def run_ec2_cluster(script_path, args, args_extra):
     command_str = "{script_path} --user={user} " \
                   "--slaves={slaves} --key-pair={key_pair} --instance-type={instance_type} " \
+                  "{private_ips} " \
                   "--region={region} --ami={ami} {action} {cluster_name} "
 
     command = command_str.format(
@@ -81,6 +86,7 @@ def run_ec2_cluster(script_path, args, args_extra):
         slaves=args.slaves,
         key_pair=args.key_pair,
         instance_type=args.instance_type,
+        private_ips="--private-ips" if args.private_ips else "",
         region=args.region,
         ami=args.ami,
         action=args.action,
@@ -93,6 +99,7 @@ def run_ec2_cluster(script_path, args, args_extra):
         subprocess.check_call(command.split(), shell=False)
     except subprocess.CalledProcessError as e:
         print("script failed with exit status %d\n" % e.returncode)
+        raise e
 
 def ssh(master, args, remote_command, extra_args=""):
     ssh_args = ['-o', 'StrictHostKeyChecking=no']
@@ -210,7 +217,7 @@ def main():
                               "&&  rm result.tar.gz")
 
     """
-     ./spark.py start spark_clust Recommender_spark.py --user=ubuntu --key-pair=spark --identity-file=spark.pem
+     ./spark.py start spark_clust Recommender_spark.py --user=ubuntu --key-pair=spark --identity-file=spark.pem --copy-master
 
     ../../../spark-ec2/spark-ec2 --slaves=2 --region=us-east-1  --key-pair=spark --identity-file=spark.pem -a ami-52d5d044
     launch spark_cluster -t t2.micro --ebs-vol-num=1 --ebs-vol-size=1

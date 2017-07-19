@@ -893,6 +893,7 @@ def setup_cluster(conn, master_nodes, slave_nodes, opts, deploy_ssh_key):
     )
     """
 
+    """
     print("Deploying files to master...")
     deploy_files(
         conn=conn,
@@ -911,6 +912,7 @@ def setup_cluster(conn, master_nodes, slave_nodes, opts, deploy_ssh_key):
             master_nodes=master_nodes
         )
 
+    """
     #print("Running setup on master...")
     #setup_spark_cluster(master, opts)
     start_spark_cluster(master_nodes, slave_nodes, opts)

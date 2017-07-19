@@ -18,7 +18,7 @@ def load_recom_data():
         recom_data = RecomData()
         recom_data.pp_sim = np.load('data/pp_sim.npy')
         recom_data.movie_index_to_ID = load_pickle('data/movie_index_to_ID.pkl')
-        recom_data.movies_df = pd.read_pickle('data/movies_df.pkl')
+        recom_data.movies_df = load_pickle('data/movies_df.pkl')
         print("Loaded recom data.")
     except IOError:
         recom_data = None
