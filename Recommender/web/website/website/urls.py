@@ -19,5 +19,6 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^recommander/', include('recommander.urls')),
+    url(r'^recommender/', include('recommender.urls')),
+    url(r'^/', include('recommender.urls')),
 ]

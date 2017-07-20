@@ -130,12 +130,16 @@ def save_obj(obj, name ):
     with open(name + '.pkl', 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
-srv_data_folder = './data'
+result_folder = './result'
 if len(sys.argv) > 1:
-	srv_data_folder = sys.argv[1]
+	result_folder = sys.argv[1]
+
+if not os.path.exists(result_folder):
+	os.mkdir(result_folder)
+
 curr_dir = os.getcwd()
-os.chdir(srv_data_folder)
-movies.to_pickle('movies_df')
+os.chdir(result_folder)
+movies.to_pickle('movies_df.pkl')
 save_obj(movie_index_to_ID, 'movie_index_to_ID')
 np.save('pp_sim', pp_sim)
 os.chdir(curr_dir)

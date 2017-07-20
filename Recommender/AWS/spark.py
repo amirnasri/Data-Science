@@ -63,6 +63,10 @@ def arg_parse(*args, **kwargs):
         "-r", "--region", default="us-east-1",
         help="EC2 region used to launch instances in, or to find them in (default: %(default)s")
     parser.add_argument(
+        "--private-ips", action="store_true", default=False,
+        help="Use private IPs for instances rather than public if VPC/subnet " +
+             "requires that.")
+    parser.add_argument(
         "-a", "--ami",
         default="ami-52d5d044",
         help="Amazon Machine Image ID to use (default: %(default)s).")
@@ -70,11 +74,10 @@ def arg_parse(*args, **kwargs):
 
 
 def run_ec2_cluster(script_path, args, args_extra):
-    print(args.slaves, args.ami
-          )
     command_str = "{script_path} --user={user} " \
                   "--slaves={slaves} --key-pair={key_pair} --instance-type={instance_type} " \
-                  "--region={region} --ami={ami} "
+                  "{private_ips} " \
+                  "--region={region} --ami={ami} {action} {cluster_name} "
 
     command = command_str.format(
         script_path=script_path,
@@ -83,25 +86,28 @@ def run_ec2_cluster(script_path, args, args_extra):
         slaves=args.slaves,
         key_pair=args.key_pair,
         instance_type=args.instance_type,
+        private_ips="--private-ips" if args.private_ips else "",
         region=args.region,
         ami=args.ami,
+        action=args.action,
+        cluster_name=args.cluster_name,
     )
     command += args_extra
     print("Running spark-ec2 script %s\n" % command)
-    sys.exit(1)
 
     try:
         subprocess.check_call(command.split(), shell=False)
     except subprocess.CalledProcessError as e:
-        print("script failed with exit status %d\n", e.returncode)
+        print("script failed with exit status %d\n" % e.returncode)
+        raise e
 
 def ssh(master, args, remote_command, extra_args=""):
     ssh_args = ['-o', 'StrictHostKeyChecking=no']
     ssh_args.extend(['-o', 'UserKnownHostsFile=/dev/null'])
     ssh_args.extend(['-i', args.identity_file])
     ssh_args.append(extra_args)
-    ssh_command = "ssh %s" % " ".join(ssh_args)
-    ssh_command = "ssh -i {identity_file} {user}@{master} 'remote_command'".format(
+    ssh_command = "ssh -q {args} {user}@{master} '{remote_command}'".format(
+        args=" ".join(ssh_args),
         user=args.user,
         master=master,
         identity_file=args.identity_file,
@@ -111,7 +117,7 @@ def ssh(master, args, remote_command, extra_args=""):
     os.system(ssh_command)
 
 
-def copy_master(master, args):
+def copy_user_files(instances, args):
     """Copy local work directory specified in 'copy-dir' option to the master.
 
     Local work directory should contain python driver program as well as any program
@@ -121,19 +127,19 @@ def copy_master(master, args):
     Note: The directory will be copied to ~/work on the master. If directory already exists
     it will be deleted first.
     """
+    for i in instances:
+        ssh(i, args, "rm -fr work")
 
-    ssh(master, args, "rm -fr work")
+        scp_command = "scp -o StrictHostKeyChecking=no -i {identity_file} -r {copy_dir} {user}@{host}:work".format(
+            identity_file=args.identity_file,
+            copy_dir=args.copy_dir,
+            user=args.user,
+            host=i,
+        )
+        print(scp_command)
+        os.system(scp_command)
 
-    scp_command = "scp -i {identity_file} -r {copy_dir} {user}@{master}:work".format(
-        identity_file=args.identity_file,
-        copy_dir=args.copy_dir,
-        user=args.user,
-        master=master,
-    )
-    print(scp_command)
-    os.system(scp_command)
-
-    ssh(master, args, "ephemeral-hdfs/bin/hadoop fs -put work /work")
+        #ssh(master, args, "ephemeral-hdfs/bin/hadoop fs -put work /work")
 
 
 def run_spark(master, args):
@@ -192,17 +198,27 @@ def main():
 
     with open("master_slave", "r") as f:
         master_address = f.readline().strip()
+        slave_addresses = [s.strip() for s in f.readlines()]
+
 
     if not master_address:
         print("Failed to obtain master address.")
         sys.exit(1)
 
     if args.copy_master:
-        copy_master(master_address, args)
+        copy_user_files([master_address] + slave_addresses, args)
 
     run_spark(master_address, args)
 
+    # Compress the results on the master and upload them to http server.
+    ssh(master_address, args, "cd work/result/"
+                              "&& tar -zcvf result.tar.gz * "
+                              "&&  curl -T result.tar.gz amirnasri.ca/recommender/upload_data"
+                              "&&  rm result.tar.gz")
+
     """
+     ./spark.py start spark_clust Recommender_spark.py --user=ubuntu --key-pair=spark --identity-file=spark.pem --copy-master
+
     ../../../spark-ec2/spark-ec2 --slaves=2 --region=us-east-1  --key-pair=spark --identity-file=spark.pem -a ami-52d5d044
     launch spark_cluster -t t2.micro --ebs-vol-num=1 --ebs-vol-size=1
 
