@@ -9,6 +9,7 @@ import pickle
 import requests
 from bs4 import BeautifulSoup
 from django.http import JsonResponse
+import urllib
 
 
 def load_pickle(name):
@@ -19,10 +20,66 @@ url_cache = {}
 cwd = os.getcwd()
 pp_sim = np.load('data/pp_sim.npy')
 movie_index_to_ID = load_pickle('data/movie_index_to_ID.pkl')
+#movies_df = pd.read_csv('data/movies_df.csv')
 movies_df = pd.read_pickle('data/movies_df.pkl')
+#movies_df.index = movies_df.iloc[:, 0]
+#del movies_df[movies_df.columns[0]]
 #recom_movie_index = np.argsort(pp_sim[0, :])[::-1][:5]
 #recom_movie_df = pd.merge(recom_movie_id_df, movies_df, how='inner', on='MovieID')
+print movies_df['IMDb-URL']
 
+
+
+def extract_img_url(resp):
+    bs = BeautifulSoup(resp.content, "lxml")
+    base_url = 'http://www.imdb.com/'
+    url_poster = base_url + bs.find("div", class_="poster").a['href']
+    resp = requests.get(url_poster)
+    bs = BeautifulSoup(resp.content, 'lxml')
+    src_url = bs.find('meta', itemprop='image')['content']
+    return src_url
+
+
+def get_poster_imdb(url, movie_title):
+
+    src_url = ''
+    try:
+        resp = requests.get(url)
+        src_url = extract_img_url(resp)
+    except:
+        pass
+
+    if src_url:
+        url_cache[url] = src_url
+        return src_url
+
+    print(url, movie_title)
+    # If imdb-url in the movie table is broken, search for the movie id
+    # using imdb API
+    try:
+        search_url = 'http://www.imdb.com/xml/find?json=1&nr=1&tt=on&q=%s' % urllib.quote_plus(movie_title)
+        print(search_url)
+        res = requests.get(search_url)
+
+        res_json = json.loads(res.content)
+        movie_id = ''
+        for k, v in res_json.iteritems():
+            if k.startswith('title'):
+                for v_ in v:
+                    if 'id' in v_:
+                        movie_id = v_['id']
+                        break
+
+        url = 'http://www.imdb.com/title/%s/' % movie_id
+        print('final url: %s' % url)
+        resp = requests.get(url)
+        src_url = extract_img_url(resp)
+        url_cache[url] = src_url
+    except IOERROR:
+        pass
+    return src_url
+    
+"""
 def get_poster_imdb(url):
     if url in url_cache:
         return url_cache[url]
@@ -38,7 +95,7 @@ def get_poster_imdb(url):
         return src_url
     except:
         return ""
-
+"""
 
 def index(request):
     context = {}
@@ -67,12 +124,14 @@ def recommander(request):
     recom_movie_id_df = pd.DataFrame({'MovieID': [movie_index_to_ID[i] for i in recom_movie_index]})
     recom_movie_df = pd.merge(recom_movie_id_df, movies_df, how='inner', on='MovieID')
 
+    movie_urls = recom_movie_df[['IMDb-URL', 'movie-title']].to_records()
     img_urls = ''
-    for url in recom_movie_df['IMDb-URL'].tolist():
+    for _, url, title in movie_urls:
         img_urls += '<a href = "%s">' % url + \
-            '<img src="%s" style = "width:200px;height:300px;border:0">' % get_poster_imdb(url) + \
+            '<img src="%s" style = "width:200px;height:300px;border:0">' % get_poster_imdb(url, title) + \
             '</a>'
 
+    print(img_urls)
     context['img_urls'] = img_urls
     #context['cwd'] = cwd
     #context['ls_output'] = os.listdir('data')

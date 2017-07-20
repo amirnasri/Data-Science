@@ -45,6 +45,7 @@ def get_poster_imdb(url, movie_title):
                     break
 
     url = 'http://www.imdb.com/title/%s/' % movie_id
+    print("final url: %s" %s)
     resp = requests.get(url)
     return extract_img_url(resp)
 

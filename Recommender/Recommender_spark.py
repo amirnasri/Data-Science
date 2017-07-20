@@ -135,7 +135,7 @@ if len(sys.argv) > 1:
 	srv_data_folder = sys.argv[1]
 curr_dir = os.getcwd()
 os.chdir(srv_data_folder)
-movies.to_pickle('movies_df.pkl')
+movies.to_pickle('movies_df')
 save_obj(movie_index_to_ID, 'movie_index_to_ID')
 np.save('pp_sim', pp_sim)
 os.chdir(curr_dir)
