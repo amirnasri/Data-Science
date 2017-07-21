@@ -11,6 +11,9 @@ from bs4 import BeautifulSoup
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import subprocess
+import re
+import json
+import urllib
 
 def load_recom_data():
     global recom_data
@@ -18,7 +21,12 @@ def load_recom_data():
         recom_data = RecomData()
         recom_data.pp_sim = np.load('data/pp_sim.npy')
         recom_data.movie_index_to_ID = load_pickle('data/movie_index_to_ID.pkl')
-        recom_data.movies_df = load_pickle('data/movies_df.pkl')
+        #recom_data.movies_df = load_pickle('data/movies_df.pkl')
+        movies_df = pd.read_csv('data/movies_df.csv')
+        movies_df.index = movies_df.iloc[:, 0]
+        del movies_df[movies_df.columns[0]]
+        movies_df.index.name = None
+        recom_data.movies_df = movies_df
         print("Loaded recom data.")
     except IOError:
         recom_data = None
@@ -32,7 +40,7 @@ def load_pickle(name):
     with open(name, 'rb') as f:
         return pickle.load(f)
 
-
+'''
 def get_poster_imdb(url):
     if url in url_cache:
         return url_cache[url]
@@ -48,6 +56,51 @@ def get_poster_imdb(url):
         return src_url
     except:
         return ""
+'''
+
+def extract_img_url(resp):
+    bs = BeautifulSoup(resp.content, "lxml")
+    base_url = 'http://www.imdb.com/'
+    url_poster = base_url + bs.find("div", class_="poster").a['href']
+    resp = requests.get(url_poster)
+    bs = BeautifulSoup(resp.content, 'lxml')
+    src_url = bs.find('meta', itemprop='image')['content']
+    return src_url
+
+regex = re.compile(r'(.*)\s*\(\d*\)')
+
+def get_poster_imdb(url, movie_title):
+    src_url = ''
+    try:
+        resp = requests.get(url)
+        src_url = extract_img_url(resp)
+    except:
+        pass
+
+    if src_url:
+        return src_url
+
+    # If imdb-url in the movie table is broken, search for the movie id
+    # using imdb API
+    m = regex.search(movie_title)
+    if m:
+        movie_title = m.group(1)
+
+    search_url = 'http://www.imdb.com/xml/find?json=1&nr=1&tt=on&q=%s' % urllib.quote_plus(movie_title)
+    res = requests.get(search_url)
+
+    res_json = json.loads(res.content)
+    movie_id = ''
+    for k, v in res_json.iteritems():
+        if k.startswith('title_popular'):
+            for v_ in v:
+                if 'id' in v_:
+                    movie_id = v_['id']
+                    break
+
+    url = 'http://www.imdb.com/title/%s/' % movie_id
+    resp = requests.get(url)
+    return extract_img_url(resp)
 
 
 def index(request):
@@ -94,11 +147,11 @@ def recommender(request):
     recom_movie_index = (np.argsort(recom_data.pp_sim[0, :]))[::-1][:5]
     recom_movie_id_df = pd.DataFrame({'MovieID': [recom_data.movie_index_to_ID[i] for i in recom_movie_index]})
     recom_movie_df = pd.merge(recom_movie_id_df, recom_data.movies_df, how='inner', on='MovieID')
-
+    recom_movie_df = recom_movie_df[[u'IMDb-URL', u'movie-title']]
     img_urls = ''
-    for url in recom_movie_df['IMDb-URL'].tolist():
+    for _, url, title in recom_movie_df.to_records():
         img_urls += '<a href = "%s">' % url + \
-            '<img src="%s" style = "width:200px;height:300px;border:0">' % get_poster_imdb(url) + \
+            '<img src="%s" style = "width:200px;height:300px;border:0">' % get_poster_imdb(url, title) + \
             '</a>'
 
     print(img_urls)

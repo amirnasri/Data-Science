@@ -5,7 +5,7 @@ import json
 import urllib
 import time
 import os
-
+import re
 
 url_cache = {}
 
@@ -18,6 +18,7 @@ def extract_img_url(resp):
     src_url = bs.find('meta', itemprop='image')['content']
     return src_url
 
+regex = re.compile(r'(.*)\s*\(\d*\)')
 
 def get_poster_imdb(url, movie_title):
     src_url = ''
@@ -32,13 +33,17 @@ def get_poster_imdb(url, movie_title):
 
     # If imdb-url in the movie table is broken, search for the movie id
     # using imdb API
+    m = regex.search(movie_title)
+    if m:
+        movie_title = m.group(1)
+
     search_url = 'http://www.imdb.com/xml/find?json=1&nr=1&tt=on&q=%s' % urllib.quote_plus(movie_title)
     res = requests.get(search_url)
 
     res_json = json.loads(res.content)
     movie_id = ''
     for k, v in res_json.iteritems():
-        if k.startswith('title'):
+        if k.startswith('title_popular'):
             for v_ in v:
                 if 'id' in v_:
                     movie_id = v_['id']

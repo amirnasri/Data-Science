@@ -139,7 +139,7 @@ if not os.path.exists(result_folder):
 
 curr_dir = os.getcwd()
 os.chdir(result_folder)
-movies.to_pickle('movies_df.pkl')
+movies.to_csv('movies_df.csv')
 save_obj(movie_index_to_ID, 'movie_index_to_ID')
 np.save('pp_sim', pp_sim)
 os.chdir(curr_dir)
