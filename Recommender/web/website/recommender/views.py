@@ -5,56 +5,19 @@ from django.http import HttpResponse
 import os
 import numpy as np
 import pandas as pd
-import pickle
-import requests
-from bs4 import BeautifulSoup
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import subprocess
-
-def load_recom_data():
-    global recom_data
-    try:
-        recom_data = RecomData()
-        recom_data.pp_sim = np.load('data/pp_sim.npy')
-        recom_data.movie_index_to_ID = load_pickle('data/movie_index_to_ID.pkl')
-        recom_data.movies_df = load_pickle('data/movies_df.pkl')
-        print("Loaded recom data.")
-    except IOError:
-        recom_data = None
-        print("Failed to load recom data.")
-
-        # recom_movie_index = np.argsort(pp_sim[0, :])[::-1][:5]
-    # recom_movie_df = pd.merge(recom_movie_id_df, movies_df, how='inner', on='MovieID')
+import movies_data
 
 
-def load_pickle(name):
-    with open(name, 'rb') as f:
-        return pickle.load(f)
-
-
-def get_poster_imdb(url):
-    if url in url_cache:
-        return url_cache[url]
-    try:
-        resp = requests.get(url)
-        bs = BeautifulSoup(resp.content, "lxml")
-        base_url = 'http://www.imdb.com/'
-        url_poster = base_url + bs.find("div", class_="poster").a['href']
-        resp = requests.get(url_poster)
-        bs = BeautifulSoup(resp.content, 'lxml')
-        src_url = bs.find('meta', itemprop='image')['content']
-        url_cache[url] = src_url
-        return src_url
-    except:
-        return ""
-
+# Views:
 
 def index(request):
     context = {}
     movies_options = u''
-    if recom_data:
-        for movie in recom_data.movies_df['movie-title'].tolist():
+    if movies_data.data:
+        for movie in movies_data.data.movies_df['movie-title'].tolist():
             try:
                 movies_options += u'<option> %s </option>' % movie
             except UnicodeDecodeError:
@@ -71,57 +34,50 @@ def upload_data(request):
     os.chdir('data')
     subprocess.check_call('tar -xzvf result.tar.gz'.split())
     os.chdir('..')
-    load_recom_data()
+    movies_data.load_movie_data()
     return HttpResponse('Data upload successful\n')
 
 
+@csrf_exempt
+def get_movie_data(request):
+    movies_data.get_movie_info()
+    movies_data.load_movie_data()
+    return HttpResponse('Successfully downloaded movie info.\n')
+
+
+@csrf_exempt
+def load_movie_data(request):
+    if movies_data.load_movie_data():
+        return HttpResponse('Successfully loaded movie info.\n')
+    else:
+        return HttpResponse('Failed to load movie info.\n')
+
+
 def test(request):
-    context = {'requesty':d}
+    context = {'request': None}
     return render(request, 'recommender/test.html', context)
 
 
 def recommender(request):
     context = {}
-    if not recom_data:
+    if not movies_data.data:
         context['img_urls'] = "No movie data found on the server."
         return JsonResponse(context)
 
     qs = request.environ['QUERY_STRING']
     names = [i.split('=')[1] for i in qs.split('&')]
-    #return HttpResponse("Hello %s " % " ".join(names))
-    #context = {'a':int(request.GET['r1'])}
-    url_list = []
-    recom_movie_index = (np.argsort(recom_data.pp_sim[0, :]))[::-1][:5]
-    recom_movie_id_df = pd.DataFrame({'MovieID': [recom_data.movie_index_to_ID[i] for i in recom_movie_index]})
-    recom_movie_df = pd.merge(recom_movie_id_df, recom_data.movies_df, how='inner', on='MovieID')
-
+    recom_movie_index = (np.argsort(movies_data.data.pp_sim[0, :]))[::-1][:5]
+    recom_movie_id = pd.DataFrame({'MovieID': [movies_data.data.movie_index_to_ID[i] for i in recom_movie_index]})
+    recom_movie_info = pd.merge(recom_movie_id, movies_data.data.movies_info, how='inner', on='MovieID')
     img_urls = ''
-    for url in recom_movie_df['IMDb-URL'].tolist():
-        img_urls += '<a href = "%s">' % url + \
-            '<img src="%s" style = "width:200px;height:300px;border:0">' % get_poster_imdb(url) + \
+    print(recom_movie_id)
+    for i in range(recom_movie_info.shape[0]):
+        row = recom_movie_info.irow(i)
+        img_urls += '<a href = "%s">' % row['movie-url'] + \
+            '<img src="%s" style = "width:200px;height:300px;border:0">' % row['img-url'] + \
             '</a>'
 
     print(img_urls)
     context['img_urls'] = img_urls
-    #context['cwd'] = cwd
-    #context['ls_output'] = os.listdir('data')
-    #return render(request, 'recommander/recom_result.html', context)
-
     return JsonResponse(context)
 
-
-class RecomData():
-    def __init__(self):
-        self.pp_sim = None
-        self.movie_index_to_ID = None
-        self.movies_df = None
-
-
-url_cache = {}
-
-recom_data = None
-load_recom_data()
-
-
-
-d = dir()
