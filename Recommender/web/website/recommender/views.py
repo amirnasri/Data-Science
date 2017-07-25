@@ -64,13 +64,11 @@ def recommender(request):
         context['img_urls'] = "No movie data found on the server."
         return JsonResponse(context)
 
-    qs = request.environ['QUERY_STRING']
-    names = [i.split('=')[1] for i in qs.split('&')]
-    recom_movie_index = (np.argsort(movies_data.data.pp_sim[0, :]))[::-1][:5]
-    recom_movie_id = pd.DataFrame({'MovieID': [movies_data.data.movie_index_to_ID[i] for i in recom_movie_index]})
-    recom_movie_info = pd.merge(recom_movie_id, movies_data.data.movies_info, how='inner', on='MovieID')
+    #qs = request.environ['QUERY_STRING']
+    #names = [i.split('=')[1] for i in qs.split('&')]
     img_urls = ''
-    print(recom_movie_id)
+    recom_movie_info = movies_data.get_recommendations(request.GET)
+    print(recom_movie_info)
     for i in range(recom_movie_info.shape[0]):
         row = recom_movie_info.irow(i)
         img_urls += '<a href = "%s">' % row['movie-url'] + \

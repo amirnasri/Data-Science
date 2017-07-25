@@ -9,11 +9,11 @@ from sklearn.preprocessing import normalize
 import pickle
 import sys
 
-ratings = pd.read_csv('ml-100k/u.data', delimiter="\t", engine="python", header=None)
+ratings = pd.read_csv('data/ml-100k/u.data', delimiter="\t", engine="python", header=None)
 ratings.columns = ["UserID::MovieID::Rating::Timestamp".split("::")]
 
 # Load movie table
-movies = pd.read_csv('ml-100k/u.item', delimiter='|', engine='python', header=None)
+movies = pd.read_csv('data/ml-100k/u.item', delimiter='|', engine='python', header=None)
 # Movie table columns as provided in the ReadMe file
 columns = ' MovieID | movie title | release date | video release date |' \
               'IMDb URL | unknown | Action | Adventure | Animation |'\
@@ -64,7 +64,7 @@ def parse_data(line):
 
 movie_ID_to_index_bc = sc.broadcast(movie_ID_to_index)
 # u_data_file = os.path.join("ml-1m", "ratings.dat")
-u_data_file = os.path.join("ml-100k", "u.data")
+u_data_file = os.path.join("data/ml-100k", "u.data")
 ratings_rdd = sc.textFile(u_data_file).map(parse_data)  # .cache().filter(lambda x: x is not None)
 
 ratings_columns = "UserID::MovieID::Rating::Timestamp".split("::")
@@ -142,5 +142,6 @@ curr_dir = os.getcwd()
 os.chdir(result_folder)
 movies.to_csv('movies_df.csv')
 save_obj(movie_index_to_ID, 'movie_index_to_ID')
+save_obj(movie_ID_to_index, 'movie_ID_to_index')
 np.save('pp_sim', pp_sim)
 os.chdir(curr_dir)
