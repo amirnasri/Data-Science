@@ -112,6 +112,9 @@ def load_df_csv(filename):
 
 
 def get_movie_info(incremental_save=True, resume=True):
+    """ For each movie-titles in 'movies_df' get
+    the movie poster url and the imdb link.
+    """
     try:
         movies_df = load_df_csv(os.path.join(data_folder, 'movies_df.csv'))
     except IOError:
@@ -122,7 +125,7 @@ def get_movie_info(incremental_save=True, resume=True):
         try:
             movies_info = load_df_csv(os.path.join(data_folder, 'movies_info.csv'))
         except IOError:
-            movies_info = pd.DataFrame(columns=['MovieID', 'movie-title', 'movie-url', 'img-url'])
+            movies_info = pd.DataFrame(columns=['movie_id', 'movie_title', 'movie_url', 'img_url'])
 
     for i in range(0, movies_df.shape[0]):
         if incremental_save and (i + 1) % 10 == 0:
@@ -133,12 +136,12 @@ def get_movie_info(incremental_save=True, resume=True):
 
         # If resume is True, check if movie info is already
         # in the database
-        movie_id = row['MovieID']
-        if resume and any(movies_info['MovieID'] == movie_id):
+        movie_id = row['movie_id']
+        if resume and any(movies_info['movie_id'] == movie_id):
             continue
 
-        imdb_url = row['IMDb-URL']
-        movie_title = row['movie-title']
+        imdb_url = row['IMDB_url']
+        movie_title = row['movie_title']
         while True:
             m = regex.search(movie_title)
             if m:
@@ -152,10 +155,10 @@ def get_movie_info(incremental_save=True, resume=True):
             imdb_url = get_imdb_url(movie_title)
 
         movies_info_row = {}
-        movies_info_row['MovieID'] = row['MovieID']
-        movies_info_row['movie-title'] = row['movie-title']
-        movies_info_row['movie-url'] = imdb_url
-        movies_info_row['img-url'] = img_url
+        movies_info_row['movie_id'] = row['movie_id']
+        movies_info_row['movie_title'] = row['movie_title']
+        movies_info_row['movie_url'] = imdb_url
+        movies_info_row['img_url'] = img_url
         movies_info = movies_info.append(pd.DataFrame(movies_info_row, index=[0]), ignore_index=True)
 
         """
@@ -193,6 +196,9 @@ class MovieData():
         self.movies_info = None
 
 def load_movie_data():
+    """ Load movie data the global 'data' variable so
+    that it is accessible to the importing modules.
+    """
     global data
     try:
         data = MovieData()
@@ -212,7 +218,8 @@ def load_movie_data():
 USER_MOVIE_NUM = 3
 def get_recommendations(request_params):
     movies = [request_params.get('m%d' % i).replace('+', ' ') for i in range(1, USER_MOVIE_NUM + 1)]
-    ratings = [int(request_params.get('r%d' % i)) for i in range(1, USER_MOVIE_NUM + 1)]
+    ratings = np.array([int(request_params.get('r%d' % i)) for i in range(1, USER_MOVIE_NUM + 1)])
+    ratings = ratings - 3
 
     """m1 = request_params['m1'].replace('+', ' ')
     m2 = request_params['m2'].replace('+', ' ')
@@ -222,17 +229,17 @@ def get_recommendations(request_params):
     r3 = request_params['r3']
     """
 
-    user_movie_titles = pd.DataFrame({'movie-title': movies})
-    user_movie_info = pd.merge(user_movie_titles, data.movies_df, how='inner', on='movie-title')
-    user_movie_ids = user_movie_info['MovieID'].tolist()
+    user_movie_titles = pd.DataFrame({'movie_title': movies})
+    user_movie_info = pd.merge(user_movie_titles, data.movies_df, how='inner', on='movie_title')
+    user_movie_ids = user_movie_info['movie_id']
     user_movie_indexes = np.array([data.movie_ID_to_index[i] for i in user_movie_ids])
-    combined_scores = np.array(ratings).dot(data.pp_sim[user_movie_indexes])
+    combined_scores = ratings.dot(data.pp_sim[user_movie_indexes])
     recom_movie_indexes = np.argsort(combined_scores)[::-1]
     recom_movie_indexes = [i for i in recom_movie_indexes if i not in user_movie_indexes][:5]
-    recom_movie_ids = pd.DataFrame({'MovieID': [data.movie_index_to_ID[i] for i in recom_movie_indexes]})
-    recom_movie_info = pd.merge(recom_movie_ids, data.movies_info, how='inner', on='MovieID')
-    print user_movie_indexes
-    print recom_movie_indexes
+    recom_movie_ids = pd.DataFrame({'movie_id': [data.movie_index_to_ID[i] for i in recom_movie_indexes]})
+    recom_movie_info = pd.merge(recom_movie_ids, data.movies_info, how='inner', on='movie_id')
+    print recom_movie_ids
+    print data.movies_info
     print recom_movie_info
     return recom_movie_info
 
