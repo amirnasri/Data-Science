@@ -20,17 +20,25 @@ def extract_img_url(resp):
 
 
 def get_imdb_url(movie_title):
+    movie_title_split = movie_title.split(',')
+    if len(movie_title_split) == 2:
+        movie_title = ' '.join(map(lambda s: s.strip(), movie_title_split[::-1]))
+        print('new_title=%s' % movie_title)
+
     search_url = 'http://www.imdb.com/xml/find?json=1&nr=1&tt=on&q=%s' % urllib.quote_plus(movie_title)
+    print('search_url: %s\n' % search_url)
     res = requests.get(search_url)
 
     res_json = json.loads(res.content)
     movie_id = ''
     for k, v in res_json.iteritems():
-        if k.startswith('title_popular'):
+        if k.startswith('title_popular') or k.startswith('title_exact'):
             for v_ in v:
                 if 'id' in v_:
                     movie_id = v_['id']
                     break
+    if not movie_id:
+        print('Could not find IMDB url')
 
     return 'http://www.imdb.com/title/%s/' % movie_id
 
@@ -82,13 +90,6 @@ def get_poster_tmdb(title):
 
 regex = re.compile('(.*[^\s])\s+\(.*\)')
 def get_poster(imdb_url, title):
-    while True:
-        m = regex.search(title)
-        if m:
-            title = m.group(1)
-        else:
-            break
-
     img_url = ''
     imdb_url = ''
     try:
@@ -111,6 +112,9 @@ def load_df_csv(filename):
 
 
 def get_movie_info(incremental_save=True, resume=True):
+    """ For each movie-titles in 'movies_df' get
+    the movie poster url and the imdb link.
+    """
     try:
         movies_df = load_df_csv(os.path.join(data_folder, 'movies_df.csv'))
     except IOError:
@@ -121,7 +125,7 @@ def get_movie_info(incremental_save=True, resume=True):
         try:
             movies_info = load_df_csv(os.path.join(data_folder, 'movies_info.csv'))
         except IOError:
-            movies_info = pd.DataFrame(columns=['MovieID', 'movie-title', 'movie-url', 'img-url'])
+            movies_info = pd.DataFrame(columns=['movie_id', 'movie_title', 'movie_url', 'img_url'])
 
     for i in range(0, movies_df.shape[0]):
         if incremental_save and (i + 1) % 10 == 0:
@@ -132,15 +136,18 @@ def get_movie_info(incremental_save=True, resume=True):
 
         # If resume is True, check if movie info is already
         # in the database
-        movie_id = row['MovieID']
-        if resume and any(movies_info['MovieID'] == movie_id):
+        movie_id = row['movie_id']
+        if resume and any(movies_info['movie_id'] == movie_id):
             continue
 
-        imdb_url = row['IMDb-URL']
-        movie_title = row['movie-title']
-        m = regex.search(movie_title)
-        if m:
-            movie_title = m.group(1)
+        imdb_url = row['IMDB_url']
+        movie_title = row['movie_title']
+        while True:
+            m = regex.search(movie_title)
+            if m:
+                movie_title = m.group(1)
+            else:
+                break
 
         print("downloading %d, %s" % (i, movie_title))
         imdb_url, img_url = get_poster(imdb_url, movie_title)
@@ -148,10 +155,10 @@ def get_movie_info(incremental_save=True, resume=True):
             imdb_url = get_imdb_url(movie_title)
 
         movies_info_row = {}
-        movies_info_row['MovieID'] = row['MovieID']
-        movies_info_row['movie-title'] = movie_title
-        movies_info_row['movie-url'] = imdb_url
-        movies_info_row['img-url'] = img_url
+        movies_info_row['movie_id'] = row['movie_id']
+        movies_info_row['movie_title'] = row['movie_title']
+        movies_info_row['movie_url'] = imdb_url
+        movies_info_row['img_url'] = img_url
         movies_info = movies_info.append(pd.DataFrame(movies_info_row, index=[0]), ignore_index=True)
 
         """
@@ -184,15 +191,20 @@ class MovieData():
     def __init__(self):
         self.pp_sim = None
         self.movie_index_to_ID = None
+        self.movie_ID_to_index = None
         self.movies_df = None
         self.movies_info = None
 
 def load_movie_data():
+    """ Load movie data the global 'data' variable so
+    that it is accessible to the importing modules.
+    """
     global data
     try:
         data = MovieData()
         data.pp_sim = np.load(os.path.join(data_folder, 'pp_sim.npy'))
         data.movie_index_to_ID = load_pickle(os.path.join(data_folder, 'movie_index_to_ID.pkl'))
+        data.movie_ID_to_index = load_pickle(os.path.join(data_folder, 'movie_ID_to_index.pkl'))
         data.movies_df = load_df_csv(os.path.join(data_folder, 'movies_df.csv'))
         data.movies_info = load_df_csv(os.path.join(data_folder, 'movies_info.csv'))
         print("Loaded movie data.")
@@ -202,7 +214,59 @@ def load_movie_data():
         print("Failed to load movie data.")
         return False
 
+
+USER_MOVIE_NUM = 3
+def get_recommendations(request_params):
+    movies = [request_params.get('m%d' % i).replace('+', ' ') for i in range(1, USER_MOVIE_NUM + 1)]
+    ratings = np.array([int(request_params.get('r%d' % i)) for i in range(1, USER_MOVIE_NUM + 1)])
+    ratings = ratings - 3
+
+    """m1 = request_params['m1'].replace('+', ' ')
+    m2 = request_params['m2'].replace('+', ' ')
+    m3 = request_params['m3'].replace('+', ' ')
+    r1 = request_params['r1']
+    r2 = request_params['r2']
+    r3 = request_params['r3']
+    """
+
+    user_movie_titles = pd.DataFrame({'movie_title': movies})
+    user_movie_info = pd.merge(user_movie_titles, data.movies_df, how='inner', on='movie_title')
+    user_movie_ids = user_movie_info['movie_id']
+    user_movie_indexes = np.array([data.movie_ID_to_index[i] for i in user_movie_ids])
+    combined_scores = ratings.dot(data.pp_sim[user_movie_indexes])
+    recom_movie_indexes = np.argsort(combined_scores)[::-1]
+    recom_movie_indexes = [i for i in recom_movie_indexes if i not in user_movie_indexes][:5]
+    recom_movie_ids = pd.DataFrame({'movie_id': [data.movie_index_to_ID[i] for i in recom_movie_indexes]})
+    recom_movie_info = pd.merge(recom_movie_ids, data.movies_info, how='inner', on='movie_id')
+    print recom_movie_ids
+    print data.movies_info
+    print recom_movie_info
+    return recom_movie_info
+
+def main():
+    load_movie_data()
+
+
+def test_main():
+    set_data_folder('../data')
+    load_movie_data()
+    request_params = {}
+
+    request_params['m1'] = 'Babe+(1995)'
+    request_params['m2'] = 'Twelve+Monkeys+(1995)'
+    request_params['m3'] = 'Seven+(Se7en)+(1995)'
+    request_params['r1'] = 5
+    request_params['r2'] = 5
+    request_params['r3'] = 5
+
+    get_recommendations(request_params)
+
+
 # Default data folder
 data_folder = 'data'
 data = None
-load_movie_data()
+
+if __name__ == '__main__':
+    test_main()
+else:
+    main()
