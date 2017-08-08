@@ -17,12 +17,15 @@ def index(request):
     """
     context = {}
     movies_options = u''
-    if movies_data.data:
-        for movie in movies_data.data.movies_df['movie_title'].tolist():
-            try:
-                movies_options += u'<option> %s </option>' % movie
-            except UnicodeDecodeError:
-                pass
+    try:
+        if movies_data.data:
+            for movie in movies_data.data.movies_df['movie_title'].tolist():
+                try:
+                    movies_options += u'<option> %s </option>' % movie
+                except UnicodeDecodeError:
+                    pass
+    except:
+        pass
     context['movie_options'] = movies_options
     return render(request, 'recommender/index.html', context)
 
@@ -38,6 +41,8 @@ def upload_data(request):
     and should be extracted to './data'.
     """
     body = request.read()
+    if not os.path.exists('data'):
+        os.mkdir('data')
     with open('data/result.tar.gz', 'w') as f:
         f.write(body)
     os.chdir('data')

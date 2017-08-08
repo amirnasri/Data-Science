@@ -81,19 +81,27 @@ def get_poster_tmdb(title):
         resp = requests.get('https://api.themoviedb.org/3/configuration?api_key=%s' % api_key)
         tmdb_configuration = json.loads(resp.content)
     tmdb_secure_base_url = tmdb_configuration['images']['secure_base_url']
+
     url = 'https://api.themoviedb.org/3/search/movie?api_key=%s&query=%s' % (api_key, title)
     resp = requests.get(url)
-    poster_path = json.loads(resp.content)['results'][0]['poster_path']
-    url = '%s%s%s' % (tmdb_secure_base_url, 'w500', poster_path)
-    return url
+    results = json.loads(resp.content)['results'][0]
+    poster_path = results['poster_path']
+    tmdb_id = results['id']
+
+    url = 'https://api.themoviedb.org/3/movie/%s?api_key=%s' % (tmdb_id, api_key)
+    resp = requests.get(url)
+    imdb_id = json.loads(resp.content)['imdb_id']
+
+    poster_url = '%s%s%s' % (tmdb_secure_base_url, 'w500', poster_path)
+    return poster_url, imdb_id
 
 
 regex = re.compile('(.*[^\s])\s+\(.*\)')
 def get_poster(imdb_url, title):
     img_url = ''
-    imdb_url = ''
     try:
-        img_url = get_poster_tmdb(title)
+        img_url, imdb_id = get_poster_tmdb(title)
+        imdb_url = 'http://www.imdb.com/title/%s/' % imdb_id
     except Exception as e:
         print('tmdb query failed with exception: %s' % e)
         try:
@@ -140,7 +148,12 @@ def get_movie_info(incremental_save=True, resume=True):
         if resume and any(movies_info['movie_id'] == movie_id):
             continue
 
-        imdb_url = row['IMDB_url']
+        imdb_url = ''
+        try:
+            imdb_url = row['IMDB_url']
+        except KeyError:
+            pass
+
         movie_title = row['movie_title']
         while True:
             m = regex.search(movie_title)
@@ -149,7 +162,7 @@ def get_movie_info(incremental_save=True, resume=True):
             else:
                 break
 
-        print("downloading %d, %s" % (i, movie_title))
+        print("\ndownloading %d, %s" % (i, movie_title))
         imdb_url, img_url = get_poster(imdb_url, movie_title)
         if not imdb_url:
             imdb_url = get_imdb_url(movie_title)
@@ -209,9 +222,9 @@ def load_movie_data():
         data.movies_info = load_df_csv(os.path.join(data_folder, 'movies_info.csv'))
         print("Loaded movie data.")
         return True
-    except IOError:
+    except IOError as e:
         data = None
-        print("Failed to load movie data.")
+        print("Failed to load movie data: %s" % e)
         return False
 
 
@@ -230,17 +243,24 @@ def get_recommendations(request_params):
     """
 
     user_movie_titles = pd.DataFrame({'movie_title': movies})
+    print('user_movie_titles: \n%s' % user_movie_titles)
     user_movie_info = pd.merge(user_movie_titles, data.movies_df, how='inner', on='movie_title')
+    print('user_movie_info: \n%s' % user_movie_info)
     user_movie_ids = user_movie_info['movie_id']
+    print('user_movie_ids: \n%s' % user_movie_ids)
     user_movie_indexes = np.array([data.movie_ID_to_index[i] for i in user_movie_ids])
+    print('user_movie_indexes: \n%s' % user_movie_indexes)
     combined_scores = ratings.dot(data.pp_sim[user_movie_indexes])
     recom_movie_indexes = np.argsort(combined_scores)[::-1]
     recom_movie_indexes = [i for i in recom_movie_indexes if i not in user_movie_indexes][:5]
     recom_movie_ids = pd.DataFrame({'movie_id': [data.movie_index_to_ID[i] for i in recom_movie_indexes]})
-    recom_movie_info = pd.merge(recom_movie_ids, data.movies_info, how='inner', on='movie_id')
-    print recom_movie_ids
-    print data.movies_info
-    print recom_movie_info
+    recom_movie_titles = pd.merge(recom_movie_ids, data.movies_df, how='inner', on='movie_id')
+    print('recom_movie_indexes: \n%s' % recom_movie_indexes)
+    print('recom_movie_ids: \n%s' % recom_movie_ids)
+    print('recom_movie_titles: \n%s' % recom_movie_titles)
+    #recom_movie_info = pd.merge(recom_movie_ids, data.movies_info, how='inner', on='movie_id')
+    recom_movie_info = pd.merge(recom_movie_titles, data.movies_info, how='inner', on='movie_title')
+    print('recom_movie_info: \n%s' % recom_movie_info)
     return recom_movie_info
 
 def main():
