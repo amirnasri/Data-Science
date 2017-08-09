@@ -83,16 +83,17 @@ def recommender(request):
 
     #qs = request.environ['QUERY_STRING']
     #names = [i.split('=')[1] for i in qs.split('&')]
-    img_urls = ''
+    img_urls = []
     recom_movie_info = movies_data.get_recommendations(request.GET)
     print(recom_movie_info)
     for i in range(recom_movie_info.shape[0]):
         row = recom_movie_info.irow(i)
-        img_urls += '<a href = "%s">' % row['movie_url'] + \
-            '<img src="%s" style = "width:200px;height:300px;border:0">' % row['img_url'] + \
-            '</a>'
+        #img_urls += '<a href = "%s">' % row['movie_url'] + \
+        #    '<img src="%s" style = "width:200px;height:300px;border:0">' % row['img_url'] + \
+        #    '</a>'
+        img_urls.append(row['img_url'])
 
-    print(img_urls)
+    print('img_urls %s' % img_urls)
     context['img_urls'] = img_urls
     return JsonResponse(context)
 
