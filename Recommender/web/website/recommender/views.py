@@ -27,8 +27,9 @@ def index(request):
     except:
         pass
     context['movie_options'] = movies_options
-    return render(request, 'recommender/index.html', context)
-
+    response = render(request, 'recommender/index.html', context)
+    response['Cache-Control'] = 'no-cache'
+    return response
 
 @csrf_exempt
 def upload_data(request):
@@ -81,9 +82,20 @@ def recommender(request):
         context['img_urls'] = "No movie data found on the server."
         return JsonResponse(context)
 
+    try:
+        cmd = request.GET.get('cmd')
+        if cmd == 'get_movie_list':
+            context['movie_list'] = movies_data.get_movie_list()
+            print(context['movie_list'])
+            return JsonResponse(context)
+    except:
+        pass
+
+
     #qs = request.environ['QUERY_STRING']
     #names = [i.split('=')[1] for i in qs.split('&')]
     img_urls = []
+    overviews = []
     recom_movie_info = movies_data.get_recommendations(request.GET)
     print(recom_movie_info)
     for i in range(recom_movie_info.shape[0]):
@@ -92,9 +104,12 @@ def recommender(request):
         #    '<img src="%s" style = "width:200px;height:300px;border:0">' % row['img_url'] + \
         #    '</a>'
         img_urls.append(row['img_url'])
+        overview = row['overview']
+        overviews.append(overview if isinstance(overview, str) else '')
 
     print('img_urls %s' % img_urls)
     context['img_urls'] = img_urls
+    context['overviews'] = overviews
     return JsonResponse(context)
 
 

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'recommander/style.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'recommander/style_recom_result.css' %}"/>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+</head>
+<body>
+
+<div style="width: 1100px; margin: 0 auto; overflow: hidden;" class="container theme-showcase" role="main">
+
+
+    <div class="panel-body w3-example">
+
+
+        <div class="row panel-margin">
+
+            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+                <label for="sel1">Select Movie:</label>
+            </div>
+
+
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <div class="form-group">
+                    <select name="m1" class="form-control" id="sel1" form="recom-form">
+                        <option selected hidden>Movie 1</option>
+
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <div class="form-group">
+                    <select name="m2" class="form-control" id="sel2" form="recom-form">
+                        <option selected hidden>Movie 2</option>
+                        {% autoescape off %}
+                        {{movie_options}}
+                        {% endautoescape %}
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <div class="form-group">
+                    <select name="m3" class="form-control" id="sel3" form="recom-form">
+                        <option selected hidden>Movie 3</option>
+                        {% autoescape off %}
+                        {{movie_options}}
+                        {% endautoescape %}
+                    </select>
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="row">
+
+            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+                <label for="sel1">Select Rating:</label>
+            </div>
+
+
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <div class="form-group">
+                    <select name="r1" class="form-control" id="sel4" form="recom-form">
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <div class="form-group">
+                    <select name="r2" class="form-control" id="sel5" form="recom-form">
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <div class="form-group">
+                    <select name="r3" class="form-control" id="sel6" form="recom-form">
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </select>
+                </div>
+            </div>
+
+        </div>
+
+        <form id="recom-form">
+        </form>
+
+        <div class="col-md-12 text-center botton-margin">
+            <button class="btn btn-lg btn-default" id="form-button">Recommend</button>
+
+        </div>
+    </div>
+
+    <!--h3 class="row text-center" id="recom_message"></h3-->
+
+    <div class="recom-result border"  id="recom_result">
+
+        <div class="recom-movie-div  border">
+
+            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" id="image1" index="1">
+            <img src="{% static 'vzmL6fP7aPKNKPRTFnZmiUfciyV.jpg' %}" class="recom-movie-img" id="image2" index="2">
+            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" id="image3" index="3">
+            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" id="image4" index="4">
+            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" id="image5" index="5">
+            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" id="image6" index="6">
+
+        </div>
+
+        <div class="select-movie-div border">
+            <img src="rhIRbceoE9lR4veEXuwCC2wARtG.jpg" class="select-movie-img" id="select-image">
+        </div>
+
+        <div class="movie-text">
+            <div class="rec-title">
+                <a href=""><b id="movie_title"></b></a>
+                <span class="nobr" id="movie_year"></span>
+            </div>
+            <p id="overview">
+            </p>
+        </div>
+
+    </div>
+
+
+    <!--div class="row text-center" id="recom_results">
+              img_urls += '<a href = "%s">' % row['movie_url'] + \
+           '<img src="https://image.tmdb.org/t/p/w500/rhIRbceoE9lR4veEXuwCC2wARtG.jpg" style = "width:200px;height:300px;border:0">' % row['img_url'] + \
+           '</a>'
+
+    </div-->
+
+</div> <!-- /container -->
+
+<!--button id='show-button' onclick="myFunction()">Try it</button-->
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+<script type="text/javascript">
+
+
+  var overviews;
+  var init = 0;
+  $(function() {
+    if (init != 0)
+        return;
+    init = 1;
+
+    $("#form-button").on("click", function() {
+      //$('#recom_message').html('').css({'margin-bottom': '30px'});
+      //$('#recom_result').hide();
+
+      var params = $('#recom-form').serialize();
+      $.ajax({
+        type: 'GET',
+        url: '/recommender/recommender?' + params,
+        success: function(recom_results) {
+          //$('#recom_message').html('Recommended movies for you: ');
+          //$('#recom_results').html(recom_results['img_urls']);
+          var img_urls = recom_results['img_urls'];
+          for (i=0; i<6; i++) {
+              $('#image' + (i+1)).attr('src', img_urls[i]);
+          }
+          //$('#recom_result').show();
+          overviews = recom_results['overviews'];
+        }
+      })
+
+
+    })
+
+      $.ajax({
+        type: 'GET',
+        url: '/recommender/recommender?cmd=get_movie_list',
+        success: function(response) {
+          $('#sel1').text(response['movie_list']);
+        }
+      })
+
+
+
+    function on_button_click() {
+      var x = document.getElementById('recom_result');
+      if (x.style.display === 'none') {
+          x.style.display = 'block';
+      } else {
+          x.style.display = 'none';
+      }
+    }
+
+    $("#show-button").on("click", on_button_click)
+
+    for (i = 0; i < 6; i++) {
+        $('#image' + (i+1)).mouseenter(
+            function() {
+                var src = $(this).attr('src');
+                $('#select-image').attr('src', src);
+                var index =  $(this).attr('index');
+                $('#overview').text(overviews[index-1]);
+            }
+        )
+
+    }
+  })
+
+
+</script>
+
+</body>
+</html>
+
+
+<!--
+<form action="/recommander/main">
+  <br>
+  Movies:
+  <input type="text" name="m1" value="Dumb & Dumber">
+  <input type="text" name="m2" value="The game">
+  <input type="text" name="m3" value="Lucky">
+  <br>
+  <br>
+  Ratings:
+  <input type="text" name="r1" value="5">
+  <input type="text" name="r2" value="4">
+  <input type="text" name="r3" value="4">
+  <br>
+  <br>
+  <input type="submit" value="Submit">
+  <button type="submit" class="btn btn btn-default">Recommand</button>
+    <input type="submit" value="Recommand" class="btn btn-lg btn-success" href="/recommander/main" role="button" id="form-botton">
+</form>
+
+$(function ("#form-button").click(function(){
+alert("fdfd")
+var params = $('#recom-form').serialize()
+$.getJSON("/recommander/recommand?" + params, function(result){
+  $.each(result, function(i, field){
+    $("recom_results").append(field + " ");
+  });
+});
+})
+
+function get_recom(){
+alert("fdfd")
+document.getElementById("demo").innerHTML = "Hello World";
+}
+
+-->
+

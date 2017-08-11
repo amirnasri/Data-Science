@@ -9,8 +9,95 @@ import re
 import numpy as np
 import pickle
 import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
+#reload(sys)
+#sys.setdefaultencoding('utf8')
+
+encodings = [
+    'ascii',
+    'utf-8',
+    'big5',
+    'big5hkscs',
+    'cp037',
+    'cp424',
+    'cp437',
+    'cp500',
+    'cp737',
+    'cp775',
+    'cp850',
+    'cp852',
+    'cp855',
+    'cp856',
+    'cp857',
+    'cp860',
+    'cp861',
+    'cp862',
+    'cp863',
+    'cp864',
+    'cp865',
+    'cp866',
+    'cp869',
+    'cp874',
+    'cp875',
+    'cp932',
+    'cp949',
+    'cp950',
+    'cp1006',
+    'cp1026',
+    'cp1140',
+    'cp1250',
+    'cp1251',
+    'cp1252',
+    'cp1253',
+    'cp1254',
+    'cp1255',
+    'cp1256',
+    'cp1257',
+    'cp1258',
+    'euc_jp',
+    'euc_jis_2004',
+    'euc_jisx0213',
+    'euc_kr',
+    'gb2312',
+    'gbk',
+    'gb18030',
+    'hz',
+    'iso2022_jp',
+    'iso2022_jp_1',
+    'iso2022_jp_2',
+    'iso2022_jp_2004',
+    'iso2022_jp_3',
+    'iso2022_jp_ext',
+    'iso2022_kr',
+    'latin_1',
+    'iso8859_2',
+    'iso8859_3',
+    'iso8859_4',
+    'iso8859_5',
+    'iso8859_6',
+    'iso8859_7',
+    'iso8859_8',
+    'iso8859_9',
+    'iso8859_10',
+    'iso8859_13',
+    'iso8859_14',
+    'iso8859_15',
+    'johab',
+    'koi8_r',
+    'koi8_u',
+    'mac_cyrillic',
+    'mac_greek',
+    'mac_iceland',
+    'mac_latin2',
+    'mac_roman',
+    'mac_turkish',
+    'ptcp154',
+    'shift_jis',
+    'shift_jis_2004',
+    'shift_jisx0213',
+    'utf_16',
+    'utf_16_be',
+    'utf_16_le',
+    'utf_7']
 
 
 def extract_img_url(resp):
@@ -91,6 +178,26 @@ def get_poster_tmdb(title):
     results = json.loads(resp.content)['results'][0]
     poster_path = results['poster_path']
     overview = results['overview']
+
+    """
+    for e in encodings:
+        try:
+            overview = overview.decode(e)
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            continue
+        print('encoding %s worked!' % e)
+        break
+    else:
+        print('no encoding worked!')
+        overview = overview.decode('utf-8', 'replace')
+
+    #overview = overview.encode()
+
+    """
+    try:
+        overview = overview.decode('ascii')
+    except:
+        overview = ''
     tmdb_id = results['id']
 
     url = 'https://api.themoviedb.org/3/movie/%s?api_key=%s' % (tmdb_id, api_key)
@@ -142,9 +249,6 @@ def get_movie_info(incremental_save=True, resume=True):
             movies_info = pd.DataFrame(columns=['movie_id', 'movie_title', 'movie_url', 'img_url'])
 
     for i in range(0, movies_df.shape[0]):
-        if incremental_save and (i + 1) % 10 == 0:
-            print(movies_info)
-            movies_info.to_csv(os.path.join(data_folder, 'movies_info.csv'), encoding='utf-8')
         #row = movies_df.iloc[i, :]
         row = movies_df.irow(i)
 
@@ -192,9 +296,16 @@ def get_movie_info(incremental_save=True, resume=True):
                     pass
             wait = True
         """
+        if incremental_save and (i + 1) % 10 == 0:
+            print(movies_info)
+            movies_info.to_csv(os.path.join(data_folder, 'movies_info.csv'))
         time.sleep(1)
 
-    movies_info.to_csv(os.path.join(data_folder, 'movies_info.csv'), encoding='utf-8')
+    movies_info.to_csv(os.path.join(data_folder, 'movies_info.csv'))
+
+
+def get_movie_list():
+    return data.movies_info['movie_title'].tolist()
 
 
 def load_pickle(name):
@@ -238,7 +349,11 @@ def load_movie_data():
 USER_MOVIE_NUM = 3
 RECOM_MOVIE_NUM = 6
 def get_recommendations(request_params):
-    movies = [request_params.get('m%d' % i).replace('+', ' ') for i in range(1, USER_MOVIE_NUM + 1)]
+    try:
+        movies = [request_params.get('m%d' % i).replace('+', ' ') for i in range(1, USER_MOVIE_NUM + 1)]
+    except AttributeError:
+        return pd.DataFrame()
+    print('movies' + str(movies))
     ratings = np.array([int(request_params.get('r%d' % i)) for i in range(1, USER_MOVIE_NUM + 1)])
     ratings = ratings - 3
 
