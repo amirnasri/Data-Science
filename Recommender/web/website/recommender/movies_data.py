@@ -305,8 +305,13 @@ def get_movie_info(incremental_save=True, resume=True):
 
 
 def get_movie_list():
-    return data.movies_info['movie_title'].tolist()
-
+    from ftfy import fix_text
+    print('------------here')
+    movie_list = data.movies_info['movie_title'].tolist()
+    movie_list = [fix_text(t) for t in movie_list]
+    #movie_list =  map(fix_text, data.movies_info['movie_title'].tolist())
+    print('-------movie_list %s' % movie_list)
+    return movie_list
 
 def load_pickle(name):
     with open(name, 'rb') as f:
@@ -351,9 +356,8 @@ RECOM_MOVIE_NUM = 6
 def get_recommendations(request_params):
     try:
         movies = [request_params.get('m%d' % i).replace('+', ' ') for i in range(1, USER_MOVIE_NUM + 1)]
-    except AttributeError:
-        return pd.DataFrame()
-    print('movies' + str(movies))
+    except:
+        return
     ratings = np.array([int(request_params.get('r%d' % i)) for i in range(1, USER_MOVIE_NUM + 1)])
     ratings = ratings - 3
 
@@ -370,6 +374,8 @@ def get_recommendations(request_params):
     user_movie_info = pd.merge(user_movie_titles, data.movies_df, how='inner', on='movie_title')
     print('user_movie_info: \n%s' % user_movie_info)
     user_movie_ids = user_movie_info['movie_id']
+    if len(user_movie_ids) == 0:
+        return
     print('user_movie_ids: \n%s' % user_movie_ids)
     user_movie_indexes = np.array([data.movie_ID_to_index[i] for i in user_movie_ids])
     print('user_movie_indexes: \n%s' % user_movie_indexes)
@@ -385,6 +391,7 @@ def get_recommendations(request_params):
     recom_movie_info = pd.merge(recom_movie_titles, data.movies_info, how='inner', on='movie_title')
     print('recom_movie_info: \n%s' % recom_movie_info)
     return recom_movie_info
+
 
 def main():
     load_movie_data()

@@ -81,23 +81,28 @@ def recommender(request):
     if not movies_data.data:
         context['img_urls'] = "No movie data found on the server."
         return JsonResponse(context)
-
+    cmd = ''
     try:
         cmd = request.GET.get('cmd')
+    except:
+        pass
+
+    if cmd:
         if cmd == 'get_movie_list':
             context['movie_list'] = movies_data.get_movie_list()
             print(context['movie_list'])
             return JsonResponse(context)
-    except:
-        pass
-
-
+        return
+    
     #qs = request.environ['QUERY_STRING']
     #names = [i.split('=')[1] for i in qs.split('&')]
-    img_urls = []
-    overviews = []
     recom_movie_info = movies_data.get_recommendations(request.GET)
     print(recom_movie_info)
+    if not recom_movie_info:
+        return JsonResponse(context)
+
+    img_urls = []
+    overviews = []
     for i in range(recom_movie_info.shape[0]):
         row = recom_movie_info.irow(i)
         #img_urls += '<a href = "%s">' % row['movie_url'] + \
