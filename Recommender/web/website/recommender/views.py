@@ -89,20 +89,21 @@ def recommender(request):
 
     if cmd:
         if cmd == 'get_movie_list':
-            context['movie_list'] = movies_data.get_movie_list()
-            print(context['movie_list'])
+            movie_list = movies_data.get_movie_list()
+            movie_list = ''.join(['<option>%s</option>' % i for i in movie_list])
+            context['movie_list'] = movie_list
             return JsonResponse(context)
         return
-    
+
     #qs = request.environ['QUERY_STRING']
     #names = [i.split('=')[1] for i in qs.split('&')]
     recom_movie_info = movies_data.get_recommendations(request.GET)
-    print(recom_movie_info)
-    if not recom_movie_info:
+    if len(recom_movie_info) == 0:
         return JsonResponse(context)
 
     img_urls = []
     overviews = []
+    results = []
     for i in range(recom_movie_info.shape[0]):
         row = recom_movie_info.irow(i)
         #img_urls += '<a href = "%s">' % row['movie_url'] + \

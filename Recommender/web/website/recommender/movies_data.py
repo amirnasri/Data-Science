@@ -305,12 +305,8 @@ def get_movie_info(incremental_save=True, resume=True):
 
 
 def get_movie_list():
-    from ftfy import fix_text
-    print('------------here')
     movie_list = data.movies_info['movie_title'].tolist()
-    movie_list = [fix_text(t) for t in movie_list]
-    #movie_list =  map(fix_text, data.movies_info['movie_title'].tolist())
-    print('-------movie_list %s' % movie_list)
+    movie_list = sorted([t.decode('utf-8', 'ignore') for t in movie_list])
     return movie_list
 
 def load_pickle(name):
