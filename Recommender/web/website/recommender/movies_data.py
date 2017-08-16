@@ -8,6 +8,97 @@ import os
 import re
 import numpy as np
 import pickle
+import sys
+#reload(sys)
+#sys.setdefaultencoding('utf8')
+
+encodings = [
+    'ascii',
+    'utf-8',
+    'big5',
+    'big5hkscs',
+    'cp037',
+    'cp424',
+    'cp437',
+    'cp500',
+    'cp737',
+    'cp775',
+    'cp850',
+    'cp852',
+    'cp855',
+    'cp856',
+    'cp857',
+    'cp860',
+    'cp861',
+    'cp862',
+    'cp863',
+    'cp864',
+    'cp865',
+    'cp866',
+    'cp869',
+    'cp874',
+    'cp875',
+    'cp932',
+    'cp949',
+    'cp950',
+    'cp1006',
+    'cp1026',
+    'cp1140',
+    'cp1250',
+    'cp1251',
+    'cp1252',
+    'cp1253',
+    'cp1254',
+    'cp1255',
+    'cp1256',
+    'cp1257',
+    'cp1258',
+    'euc_jp',
+    'euc_jis_2004',
+    'euc_jisx0213',
+    'euc_kr',
+    'gb2312',
+    'gbk',
+    'gb18030',
+    'hz',
+    'iso2022_jp',
+    'iso2022_jp_1',
+    'iso2022_jp_2',
+    'iso2022_jp_2004',
+    'iso2022_jp_3',
+    'iso2022_jp_ext',
+    'iso2022_kr',
+    'latin_1',
+    'iso8859_2',
+    'iso8859_3',
+    'iso8859_4',
+    'iso8859_5',
+    'iso8859_6',
+    'iso8859_7',
+    'iso8859_8',
+    'iso8859_9',
+    'iso8859_10',
+    'iso8859_13',
+    'iso8859_14',
+    'iso8859_15',
+    'johab',
+    'koi8_r',
+    'koi8_u',
+    'mac_cyrillic',
+    'mac_greek',
+    'mac_iceland',
+    'mac_latin2',
+    'mac_roman',
+    'mac_turkish',
+    'ptcp154',
+    'shift_jis',
+    'shift_jis_2004',
+    'shift_jisx0213',
+    'utf_16',
+    'utf_16_be',
+    'utf_16_le',
+    'utf_7']
+
 
 def extract_img_url(resp):
     bs = BeautifulSoup(resp.content, "lxml")
@@ -81,26 +172,56 @@ def get_poster_tmdb(title):
         resp = requests.get('https://api.themoviedb.org/3/configuration?api_key=%s' % api_key)
         tmdb_configuration = json.loads(resp.content)
     tmdb_secure_base_url = tmdb_configuration['images']['secure_base_url']
+
     url = 'https://api.themoviedb.org/3/search/movie?api_key=%s&query=%s' % (api_key, title)
     resp = requests.get(url)
-    poster_path = json.loads(resp.content)['results'][0]['poster_path']
-    url = '%s%s%s' % (tmdb_secure_base_url, 'w500', poster_path)
-    return url
+    results = json.loads(resp.content)['results'][0]
+    poster_path = results['poster_path']
+    overview = results['overview']
+
+    """
+    for e in encodings:
+        try:
+            overview = overview.decode(e)
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            continue
+        print('encoding %s worked!' % e)
+        break
+    else:
+        print('no encoding worked!')
+        overview = overview.decode('utf-8', 'replace')
+
+    #overview = overview.encode()
+
+    """
+    try:
+        overview = overview.decode('ascii')
+    except:
+        overview = ''
+    tmdb_id = results['id']
+
+    url = 'https://api.themoviedb.org/3/movie/%s?api_key=%s' % (tmdb_id, api_key)
+    resp = requests.get(url)
+    imdb_id = json.loads(resp.content)['imdb_id']
+
+    poster_url = '%s%s%s' % (tmdb_secure_base_url, 'w500', poster_path)
+    return poster_url, imdb_id, overview
 
 
 regex = re.compile('(.*[^\s])\s+\(.*\)')
 def get_poster(imdb_url, title):
     img_url = ''
-    imdb_url = ''
+    overview = ''
     try:
-        img_url = get_poster_tmdb(title)
+        img_url, imdb_id, overview = get_poster_tmdb(title)
+        imdb_url = 'http://www.imdb.com/title/%s/' % imdb_id
     except Exception as e:
         print('tmdb query failed with exception: %s' % e)
         try:
             imdb_url, img_url = get_poster_imdb(imdb_url, title)
         except:
             pass
-    return imdb_url, img_url
+    return imdb_url, img_url, overview
 
 
 def load_df_csv(filename):
@@ -128,9 +249,6 @@ def get_movie_info(incremental_save=True, resume=True):
             movies_info = pd.DataFrame(columns=['movie_id', 'movie_title', 'movie_url', 'img_url'])
 
     for i in range(0, movies_df.shape[0]):
-        if incremental_save and (i + 1) % 10 == 0:
-            print(movies_info)
-            movies_info.to_csv(os.path.join(data_folder, 'movies_info.csv'))
         #row = movies_df.iloc[i, :]
         row = movies_df.irow(i)
 
@@ -140,7 +258,12 @@ def get_movie_info(incremental_save=True, resume=True):
         if resume and any(movies_info['movie_id'] == movie_id):
             continue
 
-        imdb_url = row['IMDB_url']
+        imdb_url = ''
+        try:
+            imdb_url = row['IMDB_url']
+        except KeyError:
+            pass
+
         movie_title = row['movie_title']
         while True:
             m = regex.search(movie_title)
@@ -149,8 +272,8 @@ def get_movie_info(incremental_save=True, resume=True):
             else:
                 break
 
-        print("downloading %d, %s" % (i, movie_title))
-        imdb_url, img_url = get_poster(imdb_url, movie_title)
+        print("\ndownloading %d, %s" % (i, movie_title))
+        imdb_url, img_url, overview = get_poster(imdb_url, movie_title)
         if not imdb_url:
             imdb_url = get_imdb_url(movie_title)
 
@@ -159,6 +282,7 @@ def get_movie_info(incremental_save=True, resume=True):
         movies_info_row['movie_title'] = row['movie_title']
         movies_info_row['movie_url'] = imdb_url
         movies_info_row['img_url'] = img_url
+        movies_info_row['overview'] = overview
         movies_info = movies_info.append(pd.DataFrame(movies_info_row, index=[0]), ignore_index=True)
 
         """
@@ -172,10 +296,22 @@ def get_movie_info(incremental_save=True, resume=True):
                     pass
             wait = True
         """
+        if incremental_save and (i + 1) % 10 == 0:
+            print(movies_info)
+            movies_info.to_csv(os.path.join(data_folder, 'movies_info.csv'))
         time.sleep(1)
 
     movies_info.to_csv(os.path.join(data_folder, 'movies_info.csv'))
 
+
+def get_movie_list():
+    from ftfy import fix_text
+    print('------------here')
+    movie_list = data.movies_info['movie_title'].tolist()
+    movie_list = [fix_text(t) for t in movie_list]
+    #movie_list =  map(fix_text, data.movies_info['movie_title'].tolist())
+    print('-------movie_list %s' % movie_list)
+    return movie_list
 
 def load_pickle(name):
     with open(name, 'rb') as f:
@@ -209,15 +345,19 @@ def load_movie_data():
         data.movies_info = load_df_csv(os.path.join(data_folder, 'movies_info.csv'))
         print("Loaded movie data.")
         return True
-    except IOError:
+    except IOError as e:
         data = None
-        print("Failed to load movie data.")
+        print("Failed to load movie data: %s" % e)
         return False
 
 
 USER_MOVIE_NUM = 3
+RECOM_MOVIE_NUM = 6
 def get_recommendations(request_params):
-    movies = [request_params.get('m%d' % i).replace('+', ' ') for i in range(1, USER_MOVIE_NUM + 1)]
+    try:
+        movies = [request_params.get('m%d' % i).replace('+', ' ') for i in range(1, USER_MOVIE_NUM + 1)]
+    except:
+        return
     ratings = np.array([int(request_params.get('r%d' % i)) for i in range(1, USER_MOVIE_NUM + 1)])
     ratings = ratings - 3
 
@@ -230,18 +370,28 @@ def get_recommendations(request_params):
     """
 
     user_movie_titles = pd.DataFrame({'movie_title': movies})
+    print('user_movie_titles: \n%s' % user_movie_titles)
     user_movie_info = pd.merge(user_movie_titles, data.movies_df, how='inner', on='movie_title')
+    print('user_movie_info: \n%s' % user_movie_info)
     user_movie_ids = user_movie_info['movie_id']
+    if len(user_movie_ids) == 0:
+        return
+    print('user_movie_ids: \n%s' % user_movie_ids)
     user_movie_indexes = np.array([data.movie_ID_to_index[i] for i in user_movie_ids])
+    print('user_movie_indexes: \n%s' % user_movie_indexes)
     combined_scores = ratings.dot(data.pp_sim[user_movie_indexes])
     recom_movie_indexes = np.argsort(combined_scores)[::-1]
-    recom_movie_indexes = [i for i in recom_movie_indexes if i not in user_movie_indexes][:5]
+    recom_movie_indexes = [i for i in recom_movie_indexes if i not in user_movie_indexes][:RECOM_MOVIE_NUM]
     recom_movie_ids = pd.DataFrame({'movie_id': [data.movie_index_to_ID[i] for i in recom_movie_indexes]})
-    recom_movie_info = pd.merge(recom_movie_ids, data.movies_info, how='inner', on='movie_id')
-    print recom_movie_ids
-    print data.movies_info
-    print recom_movie_info
+    recom_movie_titles = pd.merge(recom_movie_ids, data.movies_df, how='inner', on='movie_id')
+    print('recom_movie_indexes: \n%s' % recom_movie_indexes)
+    print('recom_movie_ids: \n%s' % recom_movie_ids)
+    print('recom_movie_titles: \n%s' % recom_movie_titles)
+    #recom_movie_info = pd.merge(recom_movie_ids, data.movies_info, how='inner', on='movie_id')
+    recom_movie_info = pd.merge(recom_movie_titles, data.movies_info, how='inner', on='movie_title')
+    print('recom_movie_info: \n%s' % recom_movie_info)
     return recom_movie_info
+
 
 def main():
     load_movie_data()

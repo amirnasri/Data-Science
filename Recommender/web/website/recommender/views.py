@@ -17,15 +17,19 @@ def index(request):
     """
     context = {}
     movies_options = u''
-    if movies_data.data:
-        for movie in movies_data.data.movies_df['movie_title'].tolist():
-            try:
-                movies_options += u'<option> %s </option>' % movie
-            except UnicodeDecodeError:
-                pass
+    try:
+        if movies_data.data:
+            for movie in movies_data.data.movies_df['movie_title'].tolist():
+                try:
+                    movies_options += u'<option> %s </option>' % movie
+                except UnicodeDecodeError:
+                    pass
+    except:
+        pass
     context['movie_options'] = movies_options
-    return render(request, 'recommender/index.html', context)
-
+    response = render(request, 'recommender/index.html', context)
+    response['Cache-Control'] = 'no-cache'
+    return response
 
 @csrf_exempt
 def upload_data(request):
@@ -38,6 +42,8 @@ def upload_data(request):
     and should be extracted to './data'.
     """
     body = request.read()
+    if not os.path.exists('data'):
+        os.mkdir('data')
     with open('data/result.tar.gz', 'w') as f:
         f.write(body)
     os.chdir('data')
@@ -75,20 +81,40 @@ def recommender(request):
     if not movies_data.data:
         context['img_urls'] = "No movie data found on the server."
         return JsonResponse(context)
+    cmd = ''
+    try:
+        cmd = request.GET.get('cmd')
+    except:
+        pass
 
+    if cmd:
+        if cmd == 'get_movie_list':
+            context['movie_list'] = movies_data.get_movie_list()
+            print(context['movie_list'])
+            return JsonResponse(context)
+        return
+    
     #qs = request.environ['QUERY_STRING']
     #names = [i.split('=')[1] for i in qs.split('&')]
-    img_urls = ''
     recom_movie_info = movies_data.get_recommendations(request.GET)
     print(recom_movie_info)
+    if not recom_movie_info:
+        return JsonResponse(context)
+
+    img_urls = []
+    overviews = []
     for i in range(recom_movie_info.shape[0]):
         row = recom_movie_info.irow(i)
-        img_urls += '<a href = "%s">' % row['movie_url'] + \
-            '<img src="%s" style = "width:200px;height:300px;border:0">' % row['img_url'] + \
-            '</a>'
+        #img_urls += '<a href = "%s">' % row['movie_url'] + \
+        #    '<img src="%s" style = "width:200px;height:300px;border:0">' % row['img_url'] + \
+        #    '</a>'
+        img_urls.append(row['img_url'])
+        overview = row['overview']
+        overviews.append(overview if isinstance(overview, str) else '')
 
-    print(img_urls)
+    print('img_urls %s' % img_urls)
     context['img_urls'] = img_urls
+    context['overviews'] = overviews
     return JsonResponse(context)
 
 

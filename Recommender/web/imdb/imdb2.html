@@ -1,0 +1,287 @@
+<style>
+.rec-jaw-upper {
+    background: #f8f8f8;
+    /* position: absolute; */
+    top: 0px;
+    width: 215px;
+}
+
+.rec-title {
+    color: #999;
+    font-size: 13px;
+    line-height: 13px;
+}
+
+.rec-cert-genre {
+    color: #999;
+    font-size: 10px;
+}
+
+.rating-list {
+    border: 1px solid #efefef;
+    border-radius: 6px;
+    padding: 3px 3px 1px 4px;
+    width: 198px;
+    height: 13px;
+    font-size: 11px;
+    text-align: left;
+}
+
+
+
+
+element.style {
+    width: 200px;
+    height: 300px;
+    border: 0;
+}
+
+.recom-result {
+    border: 0px solid black;
+    #border-radius: 6px;
+    #padding: 3px 3px 1px 4px;
+    margin-top: 100px;
+    width: 1100px;
+    height: 450px;
+    margin:0 auto;
+}
+
+.recom-movie-div {
+    border: 0px solid black;
+    width: 470px;
+    height: 448px;
+    font-size: 11px;
+    text-align: left;
+    float: left;
+}
+
+.recom-movie-img {
+    width:auto;
+    height:50%;
+    padding: 3px;
+}
+
+
+
+.select-movie-div {
+    border: 0px solid black;
+    width: 300px;
+    height: 448px;
+    font-size: 11px;
+    text-align: left;
+    float: left;
+}
+
+.select-movie-img {
+    #width:auto;
+    height:100%;
+    width:auto;
+    padding: 3px;
+    float: left;
+}
+
+.movie-text {
+    background: #f8f8f8;
+    width: 300px;
+    height: 445px;
+    margin: 3px 0px 10px 20px;
+    padding: 12px 15px 10px 20px;
+    float: left;
+}
+
+
+.rec-title {
+    color: #999;
+    font-size: 18px;
+    line-height: 18px;
+    padding: 0px 0px 10px 0px;
+}
+
+.nobr {
+    padding: 2px
+}
+
+</style>
+
+
+<head>
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+</head>
+<body>
+<div class="container theme-showcase" role="main">
+
+
+    <div class="panel-body w3-example">
+
+
+        <div class="row panel-margin">
+
+            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+                <label for="sel1">Select Movie:</label>
+            </div>
+
+
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <div class="form-group">
+                    <select name="m1" class="form-control" id="sel1" form="recom-form">
+                        <option selected hidden>Movie 1</option>
+                        {% autoescape off %}
+                        {{movie_options}}
+                        {% endautoescape %}
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <div class="form-group">
+                    <select name="m2" class="form-control" id="sel1" form="recom-form">
+                        <option selected hidden>Movie 2</option>
+                        {% autoescape off %}
+                        {{movie_options}}
+                        {% endautoescape %}
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <div class="form-group">
+                    <select name="m3" class="form-control" id="sel1" form="recom-form">
+                        <option selected hidden>Movie 3</option>
+                        {% autoescape off %}
+                        {{movie_options}}
+                        {% endautoescape %}
+                    </select>
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="row">
+
+            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+                <label for="sel1">Select Rating:</label>
+            </div>
+
+
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <div class="form-group">
+                    <select name="r1" class="form-control" id="sel1" form="recom-form">
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <div class="form-group">
+                    <select name="r2" class="form-control" id="sel1" form="recom-form">
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <div class="form-group">
+                    <select name="r3" class="form-control" id="sel1" form="recom-form">
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </select>
+                </div>
+            </div>
+
+        </div>
+
+        <form id="recom-form">
+        </form>
+
+        <div class="col-md-12 text-center botton-margin">
+            <button class="btn btn-lg btn-default" id="form-button">Recommand</button>
+
+        </div>
+
+
+    </div>
+
+
+    <div class="recom-result">
+
+        <div class="recom-movie-div">
+
+            <img src="rhIRbceoE9lR4veEXuwCC2wARtG.jpg" class="recom-movie-img" id="image1">
+            <img src="vzmL6fP7aPKNKPRTFnZmiUfciyV.jpg" class="recom-movie-img" id="image2">
+            <img src="rhIRbceoE9lR4veEXuwCC2wARtG.jpg" class="recom-movie-img">
+            <img src="rhIRbceoE9lR4veEXuwCC2wARtG.jpg" class="recom-movie-img">
+            <img src="rhIRbceoE9lR4veEXuwCC2wARtG.jpg" class="recom-movie-img">
+            <img src="rhIRbceoE9lR4veEXuwCC2wARtG.jpg" class="recom-movie-img">
+
+        </div>
+
+        <div class="select-movie-div">
+            <img src="rhIRbceoE9lR4veEXuwCC2wARtG.jpg" class="select-movie-img" id="select-image">
+        </div>
+
+        <div class="movie-text">
+            <div class="rec-title">
+                <a href="/title/tt1375666/?ref_=tt_rec_tt"><b>Inception</b></a>
+            <span class="nobr">(2010)</span>
+            </div>
+            A thief, who steals corporate secrets through use of dream-sharing technology, is given the inverse task of
+            planting an idea into the mind of a CEO.
+        </div>
+
+    </div>
+
+
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script type="text/javascript">
+
+
+
+  $(function() {
+
+    $('#image1').mouseenter(
+        function() {
+            var src = $(this).attr('src');
+            $('#select-image').attr('src', src);
+        }
+     )
+
+    $('#image2').mouseenter(
+        function() {
+            var src = $(this).attr('src');
+            $('#select-image').attr('src', src);
+        }
+     )
+
+  })
+
+</script>
+
+</body>
