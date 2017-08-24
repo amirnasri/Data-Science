@@ -25,7 +25,7 @@
         <div class="row panel-margin">
 
             <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
-                <label for="sel1">Select Movie:</label>
+                <label id="menu_desc1">Select Movie:</label>
             </div>
 
 
@@ -61,7 +61,7 @@
         <div class="row">
 
             <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
-                <label for="sel1">Select Rating:</label>
+                <label id="menu_desc2">Select Rating:</label>
             </div>
 
 
@@ -123,22 +123,22 @@
 
         <div class="recom-movie-div  border">
 
-            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" id="image1" index="1">
-            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" id="image2" index="2">
-            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" id="image3" index="3">
-            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" id="image4" index="4">
-            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" id="image5" index="5">
-            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" id="image6" index="6">
+            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" index="1" id="image1">
+            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" index="2" id="image2">
+            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" index="3" id="image3">
+            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" index="4" id="image4">
+            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" index="5" id="image5">
+            <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="recom-movie-img" index="6" id="image6">
 
         </div>
 
         <div class="select-movie-div border">
-            <img src="rhIRbceoE9lR4veEXuwCC2wARtG.jpg" class="select-movie-img" id="select-image">
+            <a id="select-image"> <img src="{% static 'rhIRbceoE9lR4veEXuwCC2wARtG.jpg' %}" class="select-movie-img"> </a>
         </div>
 
         <div class="movie-text">
             <div class="rec-title">
-                <a href=""><b id="movie_title"></b></a>
+                <a href="" id="movie_title"></a>
                 <span class="nobr" id="movie_year"></span>
             </div>
             <p id="overview">

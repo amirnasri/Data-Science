@@ -307,7 +307,12 @@ def get_movie_info(incremental_save=True, resume=True):
 def get_movie_list():
     movie_list = data.movies_info['movie_title'].tolist()
     movie_list = sorted([t.decode('utf-8', 'ignore') for t in movie_list])
-    return movie_list
+    i = 0
+    while True:
+        if movie_list[i][0] >= 'A':
+            break
+        i += 1
+    return movie_list[i:] + movie_list[:i]
 
 def load_pickle(name):
     with open(name, 'rb') as f:
@@ -354,16 +359,14 @@ def get_recommendations(request_params):
         movies = [request_params.get('m%d' % i).replace('+', ' ') for i in range(1, USER_MOVIE_NUM + 1)]
     except:
         return
-    ratings = np.array([int(request_params.get('r%d' % i)) for i in range(1, USER_MOVIE_NUM + 1)])
-    ratings = ratings - 3
 
-    """m1 = request_params['m1'].replace('+', ' ')
-    m2 = request_params['m2'].replace('+', ' ')
-    m3 = request_params['m3'].replace('+', ' ')
-    r1 = request_params['r1']
-    r2 = request_params['r2']
-    r3 = request_params['r3']
-    """
+    ratings = []
+    for i in range(0, USER_MOVIE_NUM):
+        if movies[i]:
+            ratings.append(int(request_params.get('r%d' % (i + 1))))
+    if len(ratings) == 0:
+        return
+    ratings = np.array(ratings) - 3
 
     user_movie_titles = pd.DataFrame({'movie_title': movies})
     print('user_movie_titles: \n%s' % user_movie_titles)
@@ -385,6 +388,8 @@ def get_recommendations(request_params):
     print('recom_movie_titles: \n%s' % recom_movie_titles)
     #recom_movie_info = pd.merge(recom_movie_ids, data.movies_info, how='inner', on='movie_id')
     recom_movie_info = pd.merge(recom_movie_titles, data.movies_info, how='inner', on='movie_title')
+    del recom_movie_info['movie_id_x']
+    del recom_movie_info['movie_id_y']
     print('recom_movie_info: \n%s' % recom_movie_info)
     return recom_movie_info
 

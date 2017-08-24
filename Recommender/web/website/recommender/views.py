@@ -89,7 +89,8 @@ def recommender(request):
 
     if cmd:
         if cmd == 'get_movie_list':
-            movie_list = movies_data.get_movie_list()
+            movie_list = ['']
+            movie_list.extend(movies_data.get_movie_list())
             movie_list = ''.join(['<option>%s</option>' % i for i in movie_list])
             context['movie_list'] = movie_list
             return JsonResponse(context)
@@ -98,25 +99,21 @@ def recommender(request):
     #qs = request.environ['QUERY_STRING']
     #names = [i.split('=')[1] for i in qs.split('&')]
     recom_movie_info = movies_data.get_recommendations(request.GET)
-    if len(recom_movie_info) == 0:
+    if recom_movie_info is None\
+            or len(recom_movie_info) == 0:
         return JsonResponse(context)
 
-    img_urls = []
-    overviews = []
+    recom_movie_info.overview = [i if isinstance(i, str) else '' for i in recom_movie_info.overview]
+
     results = []
     for i in range(recom_movie_info.shape[0]):
         row = recom_movie_info.irow(i)
-        #img_urls += '<a href = "%s">' % row['movie_url'] + \
-        #    '<img src="%s" style = "width:200px;height:300px;border:0">' % row['img_url'] + \
-        #    '</a>'
-        img_urls.append(row['img_url'])
-        overview = row['overview']
-        overviews.append(overview if isinstance(overview, str) else '')
+        results.append(dict(row))
 
-    print('img_urls %s' % img_urls)
-    context['img_urls'] = img_urls
-    context['overviews'] = overviews
-    return JsonResponse(context)
+    context['results'] = results
+    print(context)
+    jr = JsonResponse(context)
+    return jr
 
 
 def test(request):
