@@ -1,0 +1,95 @@
+---
+title: "Project Report"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This document describes steps taken in solving the project for the Coursera Practical Machine Learning course.
+
+### Loading and Cleaning the Data
+The train and test data are in csv format and are loaded using the following commands:
+```{r}
+training = read.csv('pml-training.csv')
+testing = read.csv('pml-testing.csv')
+```
+
+The training data has the following dimensions:
+```{r}
+dim(training)
+```
+
+Out of the 160 columns, 67 columns have NA values:
+```{r}
+sum(colSums(is.na(training)) != 0)
+```
+
+We can remove these columns using the following command:
+```{r}
+train_rm_na = training[, colSums(is.na(training)) == 0]
+```
+Furthermore, there are several factor columns with mostly empty values which should be removed:
+
+```{r}
+factor_cols = colnames(train_rm_na)[sapply(train_rm_na, class) == 'factor']
+non_factor_cols = colnames(train_rm_na)[sapply(train_rm_na, class) != 'factor']
+
+cols = character(0)
+for (c in factor_cols) {
+        x = summary(train_rm_na[,c])
+        if (class(names(x)[1]) != "character" || names(x)[1] != '')
+            cols = c(cols, c)
+}
+
+cols_total = c(cols, non_factor_cols)
+cols_total = cols_total[which((cols_total != "X") & (cols_total != "cvtd_timestamp") & (cols_total != "new_window"))]
+
+train = train_rm_na[, cols_total]
+```
+
+### Building a Model and Cross-Validation
+Since the data has several features that have factor type, a Random Forest classifier seams to be a good fit.
+To build a model, we first split the data into train and validation sets.
+
+```{r import, message=FALSE, warning=FALSE, echo=FALSE, results = "hide"}
+library(caret)
+library(doMC)
+registerDoMC(cores = 3)
+
+inTrain = createDataPartition(train_rm_na$classe, p = .01)[[1]]
+train = train_rm_na[inTrain, cols_total]
+#train = train_rm_na[, cols_total]
+```
+
+```{r}
+inTrain = createDataPartition(train$classe)[[1]]
+train_set = train[inTrain,]
+validation_set = train[-inTrain,]
+```
+
+We can now train a RF classifier on the train part of the data and perform validation of the validation set.
+
+```{r}
+clf = train(x=train_set[which(cols_total != "classe")], y=train_set$classe, method='rf')
+train_pred = predict(clf, train_set)
+validation_pred = predict(clf, validation_set)
+train_cm = confusionMatrix(train_pred, train_set$classe)
+validation_cm = confusionMatrix(validation_pred, validation_set$classe)
+print(train_cm)
+print(validation_cm)
+```
+
+As we can see, the accuracy on both train and validation set is very high which suggests that the model is neither underfitting (since it has high train accuracy) nor overfitting (since it has high validation accuracy).
+
+### Making Predictions on the Test Set
+Finally, we use the trained model to predict the target values for the test set:
+```{r}
+test = testing[cols_total[which(cols_total != "classe")]]
+test_pred = predict(clf, test)
+test_pred
+```
+
