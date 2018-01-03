@@ -1,0 +1,557 @@
+Data Scientist Role Play: Profiling and Analyzing the Yelp Dataset Coursera Worksheet
+
+This is a 2-part assignment. In the first part, you are asked a series of questions that 
+will help you profile and understand the data just like a data scientist would. For this 
+first part of the assignment, you will be assessed both on the correctness of your 
+findings, as well as the code you used to arrive at your answer. You will be graded on 
+how easy your code is to read, so remember to use proper formatting and comments where 
+necessary.
+
+In the second part of the assignment, you are asked to come up with your own inferences 
+and analysis of the data for a particular research question you want to answer. You will be 
+required to prepare the dataset for the analysis you choose to do. As with the first part, 
+you will be graded, in part, on how easy your code is to read, so use proper formatting 
+and comments to illustrate and communicate your intent as required.
+
+For both parts of this assignment, use this "worksheet." It provides all the questions 
+you are being asked, and your job will be to transfer your answers and SQL coding where
+indicated into this worksheet so that your peers can review your work. You should be able 
+to use any Text Editor (Windows Notepad, Apple TextEdit, Notepad ++, Sublime Text, etc.) 
+to copy and paste your answers. If you are going to use Word or some other page layout
+application, just be careful to make sure your answers and code are lined appropriately.
+In this case, you may want to save as a PDF to ensure your formatting remains intact
+for you reviewer.
+
+
+
+Part 1: Yelp Dataset Profiling and Understanding
+
+1. Profile the data by finding the total number of records for each of the tables below:
+	
+	i. 	Attribute table = 10000
+	ii. 	Business table = 10000
+	iii. 	Category table = 10000
+	iv. 	Checkin table = 10000
+	v. 	elite_years table = 10000
+	vi. 	friend table = 10000
+	vii. 	hours table = 10000
+	viii. 	photo table = 10000
+	ix. 	review table = 10000
+	x. 	tip table = 10000
+	xi. 	user table = 10000
+	
+
+
+2. Find the total number of distinct records for each of the keys listed below:
+
+	i. 	Business = 10000	
+select count(*)
+from (
+select id
+from business
+)
+	ii. 	Hours = 2052
+select count(*)
+from (
+select distinct hours
+from hours
+)
+	iii. 	Category = 712
+select count(*)
+from (
+select distinct category
+from category
+)
+	iv. 	Attribute = 39
+select count(*)
+from (
+select distinct name
+from attribute
+)
+	v. 	Review = 8090
+select count(*)
+from (
+select distinct business_id
+from review
+)
+	vi. 	Checkin = 493
+select count(*)
+from (
+select distinct business_id
+from checkin
+)
+	vii. 	Photo = 10000
+select count(*)
+from (
+select distinct id
+from photo
+)
+	viii. 	Tip = 3979
+select count(*)
+from (
+select distinct business_id
+from tip
+)
+	ix. 	User = 10000
+select count(*)
+from (
+select distinct id
+from user
+)
+	x. 	Friend = 9415 
+select count(*)
+from (
+select distinct friend_id
+from friend
+)
+	xi. 	Elite_years = 2780
+select count(*)
+from (
+select distinct user_id
+from elite_years
+)
+
+
+3. Are there any columns with null values in the Users table? Indicate "yes," or "no."
+
+	Answer: no
+	
+	
+	SQL code used to arrive at answer:
+	
+select count(*)
+from user
+where <column-name> is null
+/*
+We set <column-name> to all columns from user such as id and name one-by-one and check if any
+of the queries returns a non-zero count value.
+*/
+
+	
+4. Find the minimum, maximum, and average value for the following fields:
+
+	i. Table: Review, Column: Stars
+	
+		min: 1		max: 5		avg: 3.7082
+		
+	
+	ii. Table: Business, Column: Stars
+	
+		min: 1.0	max: 5.0	avg: 3.6549
+		
+	
+	iii. Table: Tip, Column: Likes
+	
+		min: 0		max: 2		avg: 0.0144
+		
+	
+	iv. Table: Checkin, Column: Count
+	
+		min: 1		max: 53		avg: 1.9414
+		
+	
+	v. Table: User, Column: Review_count
+	
+		min: 0		max: 2000	avg: 24.2995
+		
+
+
+5. List the cities with the most reviews in descending order:
+
+	SQL code used to arrive at answer:
+	
+SELECT b.city,
+	count(*) AS cnt
+FROM business b
+INNER JOIN review r ON b.id = r.business_id
+GROUP BY b.city
+ORDER BY cnt DESC
+
+	
+	Copy and Paste the Result Below:
+	
++-----------------+-----+
+| city            | cnt |
++-----------------+-----+
+| Las Vegas       | 193 |
+| Phoenix         |  65 |
+| Toronto         |  51 |
+| Scottsdale      |  37 |
+| Henderson       |  30 |
+| Tempe           |  28 |
+| Pittsburgh      |  23 |
+| Chandler        |  22 |
+| Charlotte       |  21 |
+| Montréal        |  18 |
+| Madison         |  16 |
+| Gilbert         |  13 |
+| Mesa            |  13 |
+| Cleveland       |  12 |
+| North Las Vegas |   6 |
+| Edinburgh       |   5 |
+| Glendale        |   5 |
+| Lakewood        |   5 |
+| Cave Creek      |   4 |
+| Champaign       |   4 |
+| Markham         |   4 |
+| North York      |   4 |
+| Mississauga     |   3 |
+| Surprise        |   3 |
+| Avondale        |   2 |
++-----------------+-----+
+(Output limit exceeded, 25 of 67 total rows shown)
+
+	
+	
+6. Find the distribution of star ratings to the business in the following cities:
+
+	i. Avon
+	
+		SQL code used to arrive at answer:
+SELECT r.stars,
+	count(*) AS count
+FROM business b
+INNER JOIN review r ON b.id = r.business_id
+WHERE city = "Avon"
+GROUP BY r.stars
+		
+		Copy and Paste the Resulting Table Below (2 columns - star rating and count):
++-------+-------+
+| stars | count |
++-------+-------+
++-------+-------+
+(Zero rows)
+	
+	ii. Beachwood
+
+		SQL code used to arrive at answer:			
+SELECT r.stars,
+	count(*) AS count
+FROM business b
+INNER JOIN review r ON b.id = r.business_id
+WHERE city = "Beachwood"
+GROUP BY r.stars
+
+
+		Copy and Paste the Resulting Table Below (2 columns - star rating and count):
++-------+-------+
+| stars | count |
++-------+-------+
+|     3 |     1 |
++-------+-------+
+
+
+7. Find the top 3 users based on their total number of reviews:
+		
+	SQL code used to arrive at answer:	
+select name, review_count 
+from user
+order by review_count desc
+limit 3
+
+		
+	Copy and Paste the Result Below:
++--------+--------------+
+| name   | review_count |
++--------+--------------+
+| Gerald |         2000 |
+| Sara   |         1629 |
+| Yuri   |         1339 |
++--------+--------------+		
+
+
+8. Does posing more reviews correlate with more fans?
+
+	Please explain your findings and interpretation of the results:
+	
+select avg
+(
+(review_count - (select avg(review_count) from user))*
+(review_count - (select avg(review_count) from user))
+) as var_review_count
+from user
+
++------------------+
+| var_review_count |
++------------------+
+|    5620.33379975 |
++------------------+
+
+
+select avg
+(
+(fans - (select avg(fans) from user))*
+(fans - (select avg(fans) from user))
+) as var_fans
+from user
+
++--------------+
+|     var_fans |
++--------------+
+| 112.80909184 |
++--------------+
+
+
+select avg
+(
+(fans - (select avg(fans) from user))*
+(review_count - (select avg(review_count) from user))
+) as covar
+from user
+
++-------------+
+|       covar |
++-------------+
+| 526.4554648 |
++-------------+
+
+
+correlation between fans and review_count:
+
+corr = covar /(var_review_count * var_fans)^.5
+= 526.4554648/(5620.33379975 * 112.80909184)^.5
+= 0.661163
+	
+
+9. Are there more reviews with the word "love" or with the word "hate" in them?
+
+	Answer:
+	
+There are more reviews with the word "love".
+
+	
+	SQL code used to arrive at answer:
+
+/*  Number of reviews with the word "love" */
+select count(*) as cnt
+from review
+where lower(review.text) like "%love%" 
+
++------+
+|  cnt |
++------+
+| 1780 |
++------+
+
+	
+/*  Number of reviews with the word "hate" */
+select count(*) as cnt
+from review
+where lower(review.text) like "%hate%" 
+
++-----+
+| cnt |
++-----+
+| 232 |
++-----+
+	
+10. Find the top 10 users with the most fans:
+
+	SQL code used to arrive at answer:
+	
+select id, name, fans
+from user
+order by fans desc
+limit 10
+	
+	Copy and Paste the Result Below:
+	
++------------------------+-----------+------+
+| id                     | name      | fans |
++------------------------+-----------+------+
+| -9I98YbNQnLdAmcYfb324Q | Amy       |  503 |
+| -8EnCioUmDygAbsYZmTeRQ | Mimi      |  497 |
+| --2vR0DIsmQ6WfcSzKWigw | Harald    |  311 |
+| -G7Zkl1wIWBBmD0KRy_sCw | Gerald    |  253 |
+| -0IiMAZI2SsQ7VmyzJjokQ | Christine |  173 |
+| -g3XIcCb2b-BD0QBCcq2Sw | Lisa      |  159 |
+| -9bbDysuiWeo2VShFJJtcw | Cat       |  133 |
+| -FZBTkAZEXoP7CYvRV2ZwQ | William   |  126 |
+| -9da1xk7zgnnfO1uTVYGkA | Fran      |  124 |
+| -lh59ko3dxChBSZ9U7LfUw | Lissa     |  120 |
++------------------------+-----------+------+
+
+	
+11. Is there a strong correlation between having a high number of fans and being listed 
+	as "useful" or "funny?"
+	
+	SQL code used to arrive at answer:
+	
+
+select useful_or_funny, avg(fans) as avg_fans
+from (
+select id, name, fans, useful, funny, (useful > (select avg(useful) from user)) | (funny > (select avg(funny) from user)) as useful_or_funny
+from user
+)
+group by useful_or_funny
+	
+	Copy and Paste the Result Below:
++-----------------+---------------+
+| useful_or_funny |      avg_fans |
++-----------------+---------------+
+|               0 | 0.53328362978 |
+|               1 | 16.1849427169 |
++-----------------+---------------+	
+	
+	Please explain your findings and interpretation of the results:
+	
+We devide the users to two groups based on whether they are "useful or funny" or otherwise. To do this we use a subquery to calculate useful_or_funny
+attribute, which is one when a user is more userful that the average user or more funny than the average user. Then we group the user based on
+the useful_or_funny attribute and calculate the average number of fans for each group. The result suggest that there is a strong correlation. A user that
+is useful or funny is likely to have a higher number of fans than a user than is not useful or funny.	
+	
+	
+
+Part 2: Inferences and Analysis
+
+1. 	Pick one city and category of your choice and group the businesses in that city
+	or category by their overall star rating. Compare the businesses with 2-3 stars to 
+	the businesses with 4-5 stars and answer the following questions. Include your code.
+	
+	
+	i.	Do the two groups you chose to analyze have a different distribution of hours?
+	
+	
+	ii.	Do the two groups you chose to analyze have a different number of reviews?
+	
+We group the businesses in city of "Las Vegas" to two groups based on whether the review score is above 2.5 (high_start).
+Then we group by high_star and calculate the average review count. We see a substantial difference between
+the average review counts in the two groups.
+
+select high_star, avg(review_count)
+from (
+select *, stars > 2.5 as high_star
+from business
+where city = "Las Vegas" and state = "NV"
+)
+group by high_star
+
++-----------+-------------------+
+| high_star | avg(review_count) |
++-----------+-------------------+
+|         0 |     30.0856031128 |
+|         1 |     57.6508058327 |
++-----------+-------------------+
+
+	
+	iii.	Are you able to infer anything from the location data provided between these two
+		groups? Explain.
+
+No substantial difference is observed between the average location (latitude, langitude) of the businesses
+for high star and low star groups.
+
+select high_star, avg(review_count), avg(latitude), avg(longitude)
+from (
+select *, stars > 2.5 as high_star
+from business
+where city = "Las Vegas" and state = "NV"
+)
+group by high_star
+
++-----------+-------------------+---------------+----------------+
+| high_star | avg(review_count) | avg(latitude) | avg(longitude) |
++-----------+-------------------+---------------+----------------+
+|         0 |     30.0856031128 | 36.1351105058 | -115.180774319 |
+|         1 |     57.6508058327 | 36.1283465081 | -115.203161167 |
++-----------+-------------------+---------------+----------------+
+
+
+
+	SQL code used for analysis:
+
+Code is shown above for each part of the question.
+		
+		
+2.	Group business based on the ones that are open and the ones that are closed. What
+	differences can you find between the ones that are still open and the ones that are
+	closed? List at least two differences and the SQL code you used to arrive at your
+	answer.
+
+
+select  is_open, avg(stars), avg(review_count), count(*)
+from business
+where city = "Las Vegas" and state = "NV"
+group by is_open
+
++---------+---------------+-------------------+----------+
+| is_open |    avg(stars) | avg(review_count) | count(*) |
++---------+---------------+-------------------+----------+
+|       0 |           3.5 |             42.36 |      250 |
+|       1 | 3.78893129771 |     55.1610687023 |     1310 |
++---------+---------------+-------------------+----------+
+		
+	i. 	Difference 1:
+The number of open businesses is much larger than the closed ones.	
+	
+	ii.	Difference 2:
+Average review count and stars are higher for open businesses.
+	
+	
+	
+	SQL code used for analysis:
+
+Code is shown above.
+	
+3. 	For this last part of your analysis, you are going to choose the type of analysis you
+	want to conduct on the Yelp dataset and are going to prepare the data for analysis.
+	
+	Ideas for analysis include: Parsing out keywords and business attributes for sentiment 
+	analysis, clustering businesses to find commonalities or anomalies between them, 
+	predicting the overall star rating for a business, predicting the number of fans a 
+	user will have, and so on. These are just a few examples to get you started, so feel 
+	free to be creative and come up with your own problem you want to solve. Provide
+	answers, in-line, to all of the following:
+	
+	i. 	Indicate the type of analysis you chose to do:
+	
+Predict the number of stars for a business based on business information and the text of reviews.
+	
+	ii.	Write 1-2 brief paragraphs on the type of data you will need for your analysis
+		and why you chose that data:
+			
+We need to join the business table with the review table based on business id. In the resulting table
+we select the columns that are most suitable for prediction of the number of stars for a business. These
+columns are city, state, review_count, is_open, and review text. To be able to show the results properly, 
+we only select the first 100 characters in each review.
+		
+	iii.	Output of your finished dataset:
+	
++------------+-------+--------------+---------+------------------------------------------------------------------------------------------------------+
+| city       | state | review_count | is_open | substr(text, 1, 100)                                                                                 |
++------------+-------+--------------+---------+------------------------------------------------------------------------------------------------------+
+| Las Vegas  | NV    |         1389 |       1 | My favorite steakhouse in Las Vegas, somewhere I know I can go and get a great steak and have a grea |
+| Las Vegas  | NV    |         1389 |       1 | Was excited to go here since it was Emerille's Steakhouse.  We had reservations for 8PM and waited a |
+| Las Vegas  | NV    |         1389 |       1 | 2012 Fall Restaurant Week Lunch #2.                                                                  |
+|            |       |              |         |                                                                                                      |
+|            |       |              |         | Whether you're visiting Delmonico on a regular night, special                                        |
+| Las Vegas  | NV    |         1389 |       1 | My client took me here after the MAGIC Show and it was phenomenal! The steak danced in my mouth. Wel |
+| Charlotte  | NC    |          299 |       1 | I have heard about this place for nearly as long as I have lived in the area and finally got to try  |
+| Charlotte  | NC    |          299 |       1 | The chicken is awesome! Specially, for the price. Service is quick.                                  |
+|            |       |              |         |                                                                                                      |
+|            |       |              |         | Update: Didn't have the same gr                                                                      |
+| Phoenix    | AZ    |          700 |       0 | This place is awesome!!!  I am a die-hard fan of Robert's in Tucson but this is the first place that |
+| North York | ON    |           76 |       1 | Couldn't get a table. They wouldn't give us a table for 6. They wouldn't even try.  We would have wa |
+| Phoenix    | AZ    |          112 |       1 | Bobby is a very rude server. She has no personality considering she works at the bar. Food is very d |
+| Phoenix    | AZ    |          112 |       1 | This place can get really awesome or really dull dependent on one solitary man resembling a leprecha |
+| Phoenix    | AZ    |          279 |       1 | Every other restaraunt in an airport will get you your food before 30 minutes,  it's not even busy,  |
+| Montréal   | QC    |          398 |       1 | There is usually a line but they process very quickly.  We tried the spicy chicken and it was kind o |
+| Scottsdale | AZ    |            8 |       1 | Years ago, I banked here. They were horrible. These days the only reason I come here is to make my m |
+| Mesa       | AZ    |           18 |       1 | Rented a van in the Mesa, AZ area.  We had an issue with a cracked window.  It wasn't apparent when  |
+| Las Vegas  | NV    |           32 |       1 | Seriously the best massage I've ever had! Ariana and David are so caring and skilled! The pressure w |
+| Middleton  | WI    |           19 |       1 | Great friendly local game store! Huge selection of board games along with good sections for role-pla |
+| Las Vegas  | NV    |          574 |       1 | I love love love love Michael Mina 's restaurants . He owns a couple at bellagio . It was a very nic |
+| Las Vegas  | NV    |          574 |       1 | Classy establishment all around. The hotel it is in is the Bellagio. The service from the moment you |
+| Charlotte  | NC    |           95 |       1 | WOW! This place was exceptional, not only because every meal we enjoyed had a variety of options and |
+| Urbana     | IL    |           54 |       1 | Great crispy crust on my individual pizza.  We went for lunch and our waitress kept in mind that we  |
+| Toronto    | ON    |            7 |       1 | Richard helped my mom sell our North Toronto home several years back, and she was very, very happy w |
+| Gilbert    | AZ    |          902 |       1 | Great food, nice atmosphere, great location.  The tacos are good, I had one of each, very unique!  T |
+| Pittsburgh | PA    |          436 |       1 | The food here is always delicious. However, the bar staff seemed unhappy and was extremely unfriendl |
+| Pittsburgh | PA    |          436 |       1 | Came here on a Sunday for lunch. We ordered the candied bacon, pot roast fries, a president salad (w |
+| Pittsburgh | PA    |           93 |       1 | I've been there twice so far probably the best gourmet style pizza place in Pittsburgh. There was no |
++------------+-------+--------------+---------+------------------------------------------------------------------------------------------------------+
+(Output limit exceeded, 25 of 636 total rows shown)
+	
+	iv. 	Provide the SQL code you used to create your final dataset:
+
+select city, state, review_count, is_open, substr(text, 1, 100)
+from business b join review r on b.id = r.business_id
