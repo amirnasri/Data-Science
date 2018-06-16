@@ -1,0 +1,3 @@
+[submodule "ds_blog/plugins/ipynb"]
+	path = ds_blog/plugins/ipynb
+	url = git://github.com/danielfrg/pelican-ipynb.git
