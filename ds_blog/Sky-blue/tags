@@ -1,0 +1,105 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ADD_THIS_ID	docs/pelicanconf.py	/^ADD_THIS_ID = 'ra-55adbb025d4f7e55'$/;"	v
+ADD_THIS_ID	tests/pelicanconf.py	/^ADD_THIS_ID = 'ra-XX3242XX'$/;"	v
+AUTHOR	docs/pelicanconf.py	/^AUTHOR = 'Alexandre Vicenzi'$/;"	v
+AUTHOR	tests/pelicanconf.py	/^AUTHOR = u'Test'$/;"	v
+AUTHOR_FEED_ATOM	docs/pelicanconf.py	/^AUTHOR_FEED_ATOM = None$/;"	v
+AUTHOR_FEED_ATOM	tests/pelicanconf.py	/^AUTHOR_FEED_ATOM = None$/;"	v
+AUTHOR_FEED_RSS	docs/pelicanconf.py	/^AUTHOR_FEED_RSS = None$/;"	v
+AUTHOR_FEED_RSS	tests/pelicanconf.py	/^AUTHOR_FEED_RSS = None$/;"	v
+BROWSER_COLOR	docs/pelicanconf.py	/^BROWSER_COLOR = '#333333'$/;"	v
+BROWSER_COLOR	tests/pelicanconf.py	/^BROWSER_COLOR = '#333'$/;"	v
+CATEGORY_FEED_ATOM	docs/pelicanconf.py	/^CATEGORY_FEED_ATOM = 'feeds\/%s.atom.xml'$/;"	v
+CATEGORY_FEED_ATOM	tests/pelicanconf.py	/^CATEGORY_FEED_ATOM = 'feeds\/%s.atom.xml'$/;"	v
+CATEGORY_FEED_ATOM	tests/pelicanconf.py	/^CATEGORY_FEED_ATOM = None$/;"	v
+CC_LICENSE	docs/pelicanconf.py	/^CC_LICENSE = {$/;"	v
+CC_LICENSE	tests/pelicanconf.py	/^CC_LICENSE = {$/;"	v
+COPYRIGHT_YEAR	docs/pelicanconf.py	/^COPYRIGHT_YEAR = datetime.now().year$/;"	v
+COPYRIGHT_YEAR	tests/pelicanconf.py	/^COPYRIGHT_YEAR = 2016$/;"	v
+CUSTOM_CSS	docs/pelicanconf.py	/^CUSTOM_CSS = 'static\/custom.css'$/;"	v
+DATE_FORMATS	docs/pelicanconf.py	/^DATE_FORMATS = {$/;"	v
+DEFAULT_LANG	docs/pelicanconf.py	/^DEFAULT_LANG = 'en'$/;"	v
+DEFAULT_LANG	tests/pelicanconf.py	/^DEFAULT_LANG = u'en'$/;"	v
+DEFAULT_PAGINATION	docs/pelicanconf.py	/^DEFAULT_PAGINATION = 10$/;"	v
+DEFAULT_PAGINATION	tests/pelicanconf.py	/^DEFAULT_PAGINATION = 5$/;"	v
+DELETE_OUTPUT_DIRECTORY	tests/pelicanconf.py	/^DELETE_OUTPUT_DIRECTORY = False$/;"	v
+DISQUS_SITENAME	docs/pelicanconf.py	/^DISQUS_SITENAME = "flex-pelican"$/;"	v
+DISQUS_SITENAME	tests/pelicanconf.py	/^DISQUS_SITENAME = "test-test"$/;"	v
+EXTRA_PATH_METADATA	docs/pelicanconf.py	/^EXTRA_PATH_METADATA = {$/;"	v
+FAVICON	tests/pelicanconf.py	/^FAVICON = SITEURL + '\/images\/favicon.ico'$/;"	v
+FEED_ALL_ATOM	docs/pelicanconf.py	/^FEED_ALL_ATOM = 'feeds\/all.atom.xml'$/;"	v
+FEED_ALL_ATOM	tests/pelicanconf.py	/^FEED_ALL_ATOM = 'feeds\/all.atom.xml'$/;"	v
+GOOGLE_ADSENSE	docs/pelicanconf.py	/^GOOGLE_ADSENSE = {$/;"	v
+GOOGLE_ANALYTICS	docs/publishconf.py	/^GOOGLE_ANALYTICS = "UA-55543164-6"$/;"	v
+GOOGLE_ANALYTICS	tests/pelicanconf.py	/^GOOGLE_ANALYTICS = "UA-XXXXXX-X"$/;"	v
+HOME_HIDE_TAGS	docs/pelicanconf.py	/^HOME_HIDE_TAGS = True$/;"	v
+I18N_TEMPLATES_LANG	docs/pelicanconf.py	/^I18N_TEMPLATES_LANG = 'en'$/;"	v
+JINJA_ENVIRONMENT	tests/pelicanconf.py	/^JINJA_ENVIRONMENT = {'extensions': ['jinja2.ext.i18n',$/;"	v
+LINKS	tests/pelicanconf.py	/^LINKS = (('Portfolio', '\/\/alexandrevicenzi.com'),)$/;"	v
+LOCALE	docs/pelicanconf.py	/^LOCALE = 'en_US'$/;"	v
+MAIN_MENU	docs/pelicanconf.py	/^MAIN_MENU = True$/;"	v
+MAIN_MENU	tests/pelicanconf.py	/^MAIN_MENU = True$/;"	v
+MENUITEMS	docs/pelicanconf.py	/^MENUITEMS = (('Archives', '\/archives.html'),$/;"	v
+MENUITEMS	tests/pelicanconf.py	/^MENUITEMS = (('Archives', '\/archives.html'),$/;"	v
+OG_LOCALE	docs/pelicanconf.py	/^OG_LOCALE = 'en_US'$/;"	v
+OG_LOCALE	tests/pelicanconf.py	/^OG_LOCALE = u'en_US'$/;"	v
+OUTPUT_PATH	docs/pelicanconf.py	/^OUTPUT_PATH = 'blog\/'$/;"	v
+PATH	docs/pelicanconf.py	/^PATH = 'content'$/;"	v
+PATH	tests/pelicanconf.py	/^PATH = u'content'$/;"	v
+PLUGINS	tests/pelicanconf.py	/^PLUGINS = ['i18n_subsites', 'neighbors']$/;"	v
+PLUGIN_PATHS	tests/pelicanconf.py	/^PLUGIN_PATHS = ['..\/plugins']$/;"	v
+PYGMENTS_PATH	pygments/generate.py	/^PYGMENTS_PATH = '.\/..\/static\/pygments'$/;"	v
+PYGMENTS_STYLE	docs/pelicanconf.py	/^PYGMENTS_STYLE = 'monokai'$/;"	v
+RELATIVE_URLS	docs/publishconf.py	/^RELATIVE_URLS = False$/;"	v
+RELATIVE_URLS	tests/pelicanconf.py	/^RELATIVE_URLS = False$/;"	v
+ROBOTS	docs/pelicanconf.py	/^ROBOTS = 'index, follow'$/;"	v
+ROBOTS	tests/pelicanconf.py	/^ROBOTS = u'index, follow'$/;"	v
+SITEDESCRIPTION	docs/pelicanconf.py	/^SITEDESCRIPTION = 'Flex - The minimalist Pelican theme.'$/;"	v
+SITEDESCRIPTION	tests/pelicanconf.py	/^SITEDESCRIPTION = u'%s\\'s Thoughts and Writings' % AUTHOR$/;"	v
+SITELOGO	tests/pelicanconf.py	/^SITELOGO = u'https:\/\/www.example.com\/img\/profile.png'$/;"	v
+SITENAME	docs/pelicanconf.py	/^SITENAME = 'Flex'$/;"	v
+SITENAME	tests/pelicanconf.py	/^SITENAME = u"Test Blog"$/;"	v
+SITESUBTITLE	docs/pelicanconf.py	/^SITESUBTITLE = 'The minimalist Pelican theme'$/;"	v
+SITESUBTITLE	tests/pelicanconf.py	/^SITESUBTITLE = u'Test'$/;"	v
+SITETITLE	docs/pelicanconf.py	/^SITETITLE = 'Flex'$/;"	v
+SITETITLE	tests/pelicanconf.py	/^SITETITLE = AUTHOR$/;"	v
+SITEURL	docs/pelicanconf.py	/^SITEURL = 'http:\/\/localhost:8000'$/;"	v
+SITEURL	docs/publishconf.py	/^SITEURL = 'http:\/\/flex.alxd.me\/blog'$/;"	v
+SITEURL	tests/pelicanconf.py	/^SITEURL = u'http:\/\/localhost:8000'$/;"	v
+SOCIAL	docs/pelicanconf.py	/^SOCIAL = ($/;"	v
+SOCIAL	tests/pelicanconf.py	/^SOCIAL = (('linkedin', 'https:\/\/br.linkedin.com\/in\/test'),$/;"	v
+STATIC_PATHS	docs/pelicanconf.py	/^STATIC_PATHS = ['images', 'extra']$/;"	v
+STATUSCAKE	tests/pelicanconf.py	/^STATUSCAKE = {$/;"	v
+SUMMARY_MAX_LENGTH	tests/pelicanconf.py	/^SUMMARY_MAX_LENGTH = 150$/;"	v
+THEME	docs/pelicanconf.py	/^THEME = '..\/'$/;"	v
+THEME	tests/pelicanconf.py	/^THEME = u'..\/'$/;"	v
+TIMEZONE	docs/pelicanconf.py	/^TIMEZONE = 'America\/New_York'$/;"	v
+TIMEZONE	tests/pelicanconf.py	/^TIMEZONE = u'America\/Sao_Paulo'$/;"	v
+TRANSLATION_FEED_ATOM	docs/pelicanconf.py	/^TRANSLATION_FEED_ATOM = None$/;"	v
+TRANSLATION_FEED_ATOM	tests/pelicanconf.py	/^TRANSLATION_FEED_ATOM = None$/;"	v
+USE_FOLDER_AS_CATEGORY	docs/pelicanconf.py	/^USE_FOLDER_AS_CATEGORY = False$/;"	v
+USE_FOLDER_AS_CATEGORY	tests/pelicanconf.py	/^USE_FOLDER_AS_CATEGORY = True$/;"	v
+USE_LESS	docs/pelicanconf.py	/^USE_LESS = True$/;"	v
+USE_LESS	docs/publishconf.py	/^USE_LESS = False$/;"	v
+USE_LESS	tests/pelicanconf.py	/^USE_LESS = True$/;"	v
+alive	docs/develop_server.sh	/^function alive() {$/;"	f
+alive	tests/develop_server.sh	/^function alive() {$/;"	f
+can_run	translate.sh	/^function can_run() {$/;"	f
+compile_translations	translate.sh	/^function compile_translations() {$/;"	f
+export	pygments/generate.py	/^def export():$/;"	f
+extract_pot	translate.sh	/^function extract_pot() {$/;"	f
+gulp	gulpfile.js	/^var gulp = require('gulp'),$/;"	v
+new_translation	translate.sh	/^function new_translation() {$/;"	f
+shut_down	docs/develop_server.sh	/^function shut_down(){$/;"	f
+shut_down	tests/develop_server.sh	/^function shut_down(){$/;"	f
+start_up	docs/develop_server.sh	/^function start_up(){$/;"	f
+start_up	tests/develop_server.sh	/^function start_up(){$/;"	f
+update_translation	translate.sh	/^function update_translation() {$/;"	f
+usage	docs/develop_server.sh	/^function usage(){$/;"	f
+usage	tests/develop_server.sh	/^function usage(){$/;"	f
+usage	translate.sh	/^function usage {$/;"	f
