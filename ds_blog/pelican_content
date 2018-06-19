@@ -1,0 +1,7 @@
+#!/bin/bash
+
+pelican content
+cd output
+../remove_in_out.py
+
+
