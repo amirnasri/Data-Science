@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 AUTHOR = u'Amir Nasri'
-SITENAME = u'data-science-blog'
+SITENAME = u'Data Science Passion'
 SITEURL = ''
 
 PATH = 'content'
@@ -41,4 +41,3 @@ PLUGINS = ['ipynb.markup']
 
 IGNORE_FILES = ['.ipynb_checkpoints']
 THEME = './Sky-blue'
-
