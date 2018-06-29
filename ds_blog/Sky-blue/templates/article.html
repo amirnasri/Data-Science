@@ -19,13 +19,6 @@
     {% endif %}
     <h1 id="{{ article.slug }}"></h1>
     <p class="posted_on">
-      {{ _('Posted on %(when)s in %(category)s',
-           when=article.locale_date,
-           category='<a href="%s/%s">%s</a>'|format(SITEURL, article.category.url, article.category)|safe) }}
-
-      {% if 'post_stats' in PLUGINS %}
-        &#8226; {{ article.stats['read_mins'] }} min read
-      {% endif %}
     </p>
   </header>
 
