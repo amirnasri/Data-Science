@@ -3,5 +3,6 @@
 pelican content
 cd output
 ../remove_in_out.py
-
+cd ..
+./copy_html.py
 
