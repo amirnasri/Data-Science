@@ -20,7 +20,7 @@ os.environ['CLUSTER_ID'] = CLUSTER_ID
 
 cluster_status = subprocess.check_output("aws emr describe-cluster --cluster-id $CLUSTER_ID --query 'Cluster.Status.State' --output text", shell=True)
 domain_name = subprocess.check_output("aws emr describe-cluster --cluster-id $CLUSTER_ID \
---query 'Cluster.MasterPublicDnsName' --output text", shell=True)
+--query 'Cluster.MainPublicDnsName' --output text", shell=True)
 
 print("cluster domain-name=%s status=%s" % (domain_name, cluster_status))
 
@@ -31,7 +31,7 @@ script_dir = "../../training-scripts/"
 key_file = os.path.abspath("spark.pem")
 key_file_name = "spark"
 instance_type = "t1.micro"
-n_slaves = 2
+n_subordinates = 2
 aim = "amplab-training"
 
 os.system("chmod 600 %s" % key_file)

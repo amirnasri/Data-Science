@@ -30,19 +30,19 @@ def arg_parse(*args, **kwargs):
         help='Name of the ec2 culster.')
     parser.add_argument(
         'python_driver',
-        help='Python driver program to run on the master.')
+        help='Python driver program to run on the main.')
     parser.add_argument(
         '--remote-spark-home', default='~/spark/',
         help='Directory on the instances where spark is installed (default: \'%(default)s\').')
     parser.add_argument(
-        '--copy-master', action='store_true',
-        help='Whether to copy \'copy-dir\' to the master.')
+        '--copy-main', action='store_true',
+        help='Whether to copy \'copy-dir\' to the main.')
     parser.add_argument(
         '--copy-dir', default='work',
-        help='Local directory to be copied to the master (default: \'%(default)s\').')
+        help='Local directory to be copied to the main (default: \'%(default)s\').')
     parser.add_argument(
         '-u', '--user', default='root',
-        help='SSH user to use for logging onto the master (default: \'%(default)s\').')
+        help='SSH user to use for logging onto the main (default: \'%(default)s\').')
     parser.add_argument(
         '-i', '--identity-file',
         help='SSH private key file to user for logging into instances (default: \'%(default)s\').')
@@ -50,8 +50,8 @@ def arg_parse(*args, **kwargs):
         '--ec2-access-key', default='accessKeys.csv',
         help='AWS ec2 access key file (default: \'%(default)s\').')
     parser.add_argument(
-        '-s', '--slaves', type = int, default = 1,
-        help = 'Number of slaves to launch (default: %(default)s)')
+        '-s', '--subordinates', type = int, default = 1,
+        help = 'Number of subordinates to launch (default: %(default)s)')
     parser.add_argument(
         '-k', '--key-pair',
         default='',
@@ -81,7 +81,7 @@ def arg_parse(*args, **kwargs):
 
 def run_ec2_cluster(script_path, args, args_extra):
     command_str = '{script_path} --user={user} ' \
-                  '--slaves={slaves} --key-pair={key_pair} --instance-type={instance_type} ' \
+                  '--subordinates={subordinates} --key-pair={key_pair} --instance-type={instance_type} ' \
                   '{private_ips} ' \
                   '--region={region} --ami={ami} {action} {cluster_name} '
 
@@ -89,7 +89,7 @@ def run_ec2_cluster(script_path, args, args_extra):
         script_path=script_path,
         user=args.user,
         identity_file=args.identity_file,
-        slaves=args.slaves,
+        subordinates=args.subordinates,
         key_pair=args.key_pair,
         instance_type=args.instance_type,
         private_ips='--private-ips' if args.private_ips else '',
@@ -107,15 +107,15 @@ def run_ec2_cluster(script_path, args, args_extra):
         print('script failed with exit status %d\n' % e.returncode)
         raise e
 
-def ssh(master, args, remote_command, extra_args=''):
+def ssh(main, args, remote_command, extra_args=''):
     ssh_args = ['-o', 'StrictHostKeyChecking=no']
     ssh_args.extend(['-o', 'UserKnownHostsFile=/dev/null'])
     ssh_args.extend(['-i', args.identity_file])
     ssh_args.append(extra_args)
-    ssh_command = 'ssh -q {args} {user}@{master} \'{remote_command}\''.format(
+    ssh_command = 'ssh -q {args} {user}@{main} \'{remote_command}\''.format(
         args=' '.join(ssh_args),
         user=args.user,
-        master=master,
+        main=main,
         identity_file=args.identity_file,
         remote_command=remote_command,
     )
@@ -124,13 +124,13 @@ def ssh(master, args, remote_command, extra_args=''):
 
 
 def copy_user_files(instances, args):
-    '''Copy local work directory specified in 'copy-dir' option to the master.
+    '''Copy local work directory specified in 'copy-dir' option to the main.
 
     Local work directory should contain python driver program as well as any program
-    or data needed by the driver program. After directory is uploaded to master, it is
-    copied to hdfs so that it is also available in slaves.
+    or data needed by the driver program. After directory is uploaded to main, it is
+    copied to hdfs so that it is also available in subordinates.
 
-    Note: The directory will be copied to ~/work on the master. If directory already exists
+    Note: The directory will be copied to ~/work on the main. If directory already exists
     it will be deleted first.
     '''
     subprocess.check_call(('tar czvf work.tar.gz %s' % args.copy_dir).split())
@@ -147,14 +147,14 @@ def copy_user_files(instances, args):
                      '&& tar xzvf work.tar.gz'
                      '&& rm work.tar.gz')
 
-        #ssh(master, args, 'ephemeral-hdfs/bin/hadoop fs -put work /work')
+        #ssh(main, args, 'ephemeral-hdfs/bin/hadoop fs -put work /work')
 
 
-def run_spark(master, args):
-    remote_command = 'cd work; {0}/bin/spark-submit --master spark://{1}:7077 {2}'.format(
-        args.remote_spark_home, master, args.python_driver
+def run_spark(main, args):
+    remote_command = 'cd work; {0}/bin/spark-submit --main spark://{1}:7077 {2}'.format(
+        args.remote_spark_home, main, args.python_driver
     )
-    ssh(master, args, remote_command)
+    ssh(main, args, remote_command)
 
 
 def main():
@@ -198,29 +198,29 @@ def main():
     
     
         '''
-        1) copy work directory to master
+        1) copy work directory to main
             - work directory contains python script and required data
-        2) copy work directory on the master to hdfs so it is accessible from all slaves
+        2) copy work directory on the main to hdfs so it is accessible from all subordinates
     
-        3) run spark submit on the master
+        3) run spark submit on the main
         '''
     
-        with open('master_slave', 'r') as f:
-            master_address = f.readline().strip()
-            slave_addresses = [s.strip() for s in f.readlines()]
+        with open('main_subordinate', 'r') as f:
+            main_address = f.readline().strip()
+            subordinate_addresses = [s.strip() for s in f.readlines()]
     
     
-        if not master_address:
-            print('Failed to obtain master address.')
+        if not main_address:
+            print('Failed to obtain main address.')
             sys.exit(1)
     
-        if args.copy_master:
-            copy_user_files([master_address] + slave_addresses, args)
+        if args.copy_main:
+            copy_user_files([main_address] + subordinate_addresses, args)
     
-        run_spark(master_address, args)
+        run_spark(main_address, args)
     
-        # Compress the results on the master and upload them to http server.
-        ssh(master_address, args, 'cd work/result/'
+        # Compress the results on the main and upload them to http server.
+        ssh(main_address, args, 'cd work/result/'
                                   '&& tar -zcvf result.tar.gz * '
                                   '&&  curl -T result.tar.gz {remote_server}/recommender/upload_data'
                                   '&&  rm result.tar.gz'.format(remote_server=args.remote_server))
@@ -239,19 +239,19 @@ def main():
 
     '''
      ./spark.py start spark_clust Recommender_spark.py --user=ubuntu --key-pair=spark \
-     --identity-file=AWS/spark.pem --copy-master --ec2-access-key=AWS/accessKeys.csv \
+     --identity-file=AWS/spark.pem --copy-main --ec2-access-key=AWS/accessKeys.csv \
      --run-local --remote-server localhost:8000
 
      ./spark.py start spark_clust Recommender_spark.py --user=ubuntu --key-pair=spark \
-     --identity-file=AWS/spark.pem --copy-master --ec2-access-key=AWS/accessKeys.csv \
+     --identity-file=AWS/spark.pem --copy-main --ec2-access-key=AWS/accessKeys.csv \
      --remote-server amirnasri.ca
 
-    ../../../spark-ec2/spark-ec2 --slaves=2 --region=us-east-1  --key-pair=spark --identity-file=spark.pem -a ami-52d5d044
+    ../../../spark-ec2/spark-ec2 --subordinates=2 --region=us-east-1  --key-pair=spark --identity-file=spark.pem -a ami-52d5d044
     launch spark_cluster -t t2.micro --ebs-vol-num=1 --ebs-vol-size=1
 
 
     scp -i AWS/spark.pem -r work ubuntu@ec2-34-201-14-166.compute-1.amazonaws.com:
-    ../../../spark-ec2/spark-ec2 --slaves=1 --region=us-east-1  --key-pair=spark --identity-file=AWS/spark.pem -a ami-19474270 launch spark_cluster -t m1.medium --ebs-vol-num=1 --ebs-vol-size=1
+    ../../../spark-ec2/spark-ec2 --subordinates=1 --region=us-east-1  --key-pair=spark --identity-file=AWS/spark.pem -a ami-19474270 launch spark_cluster -t m1.medium --ebs-vol-num=1 --ebs-vol-size=1
 
     '''
 
